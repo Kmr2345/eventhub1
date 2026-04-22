@@ -10,6 +10,9 @@ router.post("/", auth, async (req, res) => {
     const { eventId } = req.body;
 
     console.log("REGISTER:", req.user.id, eventId);
+    if (req.user.role === "organizer") {
+          return res.status(403).json("Organizers cannot register for events");
+        }
 
     if (!eventId || !mongoose.Types.ObjectId.isValid(eventId)) {
       return res.status(400).json("Invalid eventId");
