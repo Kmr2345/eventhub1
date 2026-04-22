@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eventhub/data/app_state.dart';
 import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/services/api_service.dart';
+import 'package:eventhub/i18n/labels.dart';
 import 'package:eventhub/theme/app_theme.dart';
 class EventDetailScreen extends StatefulWidget {
   final EventModel event;
@@ -196,6 +197,28 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  if (isReg) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check, color: Colors.green, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            getLabel('registered', lang),
+                            style: const TextStyle(color: Colors.green),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Description
                   Text(T['description']!, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6)),
                   const SizedBox(height: 8),
@@ -259,7 +282,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(color: AppColors.secondary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                            child: Text('✓ ${lang == 'ru' ? 'Вы зарегистрированы' : lang == 'kz' ? 'Тіркелдіңіз' : 'You are registered'}',
+                            child: Text('✓ ${getLabel('registered', lang)}',
                                 style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
                           ),
                         ],
@@ -294,8 +317,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       final result = await ApiService.registerToEvent(e.id, token);
                                       print('response: $result');
 
+                                      setState(() => _isRegistered = true);
+
                                       // After register, refresh /registrations/my so we can cancel using registrationId later.
                                       await _loadRegistration();
+                                      await context.read<AppState>().refreshMyRegistrations();
 
                                       if (!mounted) return;
                                       ScaffoldMessenger.of(context).showSnackBar(
@@ -320,7 +346,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       final result = await ApiService.cancelRegistration(registrationId, token);
                                       print('response: $result');
 
+                                      setState(() => _isRegistered = false);
+
                                       await _loadRegistration();
+                                      await context.read<AppState>().refreshMyRegistrations();
 
                                       if (!mounted) return;
                                       ScaffoldMessenger.of(context).showSnackBar(

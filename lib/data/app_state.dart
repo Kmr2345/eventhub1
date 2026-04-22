@@ -48,8 +48,22 @@ class AppState extends ChangeNotifier {
   }
 
   // Registration
-  bool isRegistered(String eventId) =>
-      registrations[eventId]?.contains(user?.email) ?? false;
+  bool isRegistered(String eventId) {
+    // Prefer backend truth if loaded.
+    if (myRegistrations.isNotEmpty) {
+      for (final r in myRegistrations) {
+        if (r is! Map) continue;
+        final status = r['status']?.toString();
+        if (status == 'cancelled') continue;
+        final ev = r['eventId'];
+        final evId = ev is Map ? (ev['_id'] ?? ev['id'])?.toString() : ev?.toString();
+        if (evId == eventId) return true;
+      }
+      return false;
+    }
+    // Fallback to local-only state (legacy).
+    return registrations[eventId]?.contains(user?.email) ?? false;
+  }
 
   Future<void> refreshMyRegistrations() async {
     final t = token;

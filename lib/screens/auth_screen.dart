@@ -257,6 +257,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                 user['name'] as String,
                                 user['role'] as String,
                               );
+                              // Load registrations so event list cards show registered badge.
+                              await state.refreshMyRegistrations();
                             } else {
                               final name = _nameCtrl.text.trim();
                               if (name.isEmpty) {
@@ -271,6 +273,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 SnackBar(content: Text(t['registerSuccess']!)),
                               );
                               setState(() => isRegister = false);
+                              await state.refreshMyRegistrations();
                             }
 
                           } catch (e) {

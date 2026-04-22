@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/theme/app_theme.dart';
+import 'package:eventhub/i18n/labels.dart';
 
 class EventCard extends StatelessWidget {
   final EventModel event;
@@ -80,7 +81,7 @@ class EventCard extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(color: AppColors.secondary, borderRadius: BorderRadius.circular(20)),
-                          child: Text('✓ Registered', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+                          child: Text('✓ ${getLabel('registered', language)}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
                       ),
                     // Favorite button
