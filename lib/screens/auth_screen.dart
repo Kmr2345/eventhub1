@@ -32,7 +32,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Войти',
       'register': 'Зарегистрироваться',
       'createAccount': 'Создать аккаунт',
-      'demo': 'Демо: любой email и пароль',
+      'emptyCreds': 'Введите email и пароль',
       'signupPrompt': 'Нет аккаунта? ',
       'signupCta': 'Зарегистрируйтесь',
       'signinPrompt': 'Уже есть аккаунт? ',
@@ -51,7 +51,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Кіру',
       'register': 'Тіркелу',
       'createAccount': 'Аккаунт ашу',
-      'demo': 'Демо: кез келген email және пароль',
+      'emptyCreds': 'Email мен құпия сөзді енгізіңіз',
       'signupPrompt': 'Аккаунтыңыз жоқ па? ',
       'signupCta': 'Тіркеліңіз',
       'signinPrompt': 'Аккаунтыңыз бар ма? ',
@@ -70,7 +70,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Log In',
       'register': 'Sign up',
       'createAccount': 'Create account',
-      'demo': 'Demo: use any email & password',
+      'emptyCreds': 'Enter email and password',
       'signupPrompt': 'Don\'t have an account? ',
       'signupCta': 'Sign up',
       'signinPrompt': 'Already have an account? ',
@@ -228,6 +228,13 @@ class _AuthScreenState extends State<AuthScreen> {
 
                           final email = _emailCtrl.text.trim();
                           final password = _passwordCtrl.text.trim();
+                          if (email.isEmpty || password.isEmpty) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(t['emptyCreds']!)),
+                            );
+                            return;
+                          }
 
                           try {
                             if (!isRegister) {
@@ -291,8 +298,6 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(t['demo']!, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
-                      const SizedBox(height: 10),
                       Center(
                         child: GestureDetector(
                           onTap: () => setState(() => isRegister = !isRegister),
