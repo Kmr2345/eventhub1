@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:eventhub/data/app_state.dart';
 import 'package:eventhub/models/event_model.dart';
+import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/theme/app_theme.dart';
 class EventDetailScreen extends StatefulWidget {
   final EventModel event;
@@ -226,7 +227,41 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       Expanded(
                         flex: 3,
                         child: GestureDetector(
-                          onTap: isFull ? null : () { state.toggleRegistration(e.id); setState(() {}); },
+                          onTap: isFull
+                              ? null
+                              : () async {
+                                  final token = context.read<AppState>().token;
+                                  print('eventId: ${e.id}');
+                                  print('token: $token');
+
+                                  if (token == null || token.isEmpty) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Auth token missing')),
+                                    );
+                                    return;
+                                  }
+
+                                  try {
+                                    final result = await ApiService.registerToEvent(e.id, token);
+                                    print('response: $result');
+
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Registered successfully')),
+                                    );
+
+                                    // Keep local UI state consistent with the existing flow.
+                                    state.toggleRegistration(e.id);
+                                    setState(() {});
+                                  } catch (err) {
+                                    print('error: ${err.toString()}');
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(err.toString())),
+                                    );
+                                  }
+                                },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 15),
                             decoration: BoxDecoration(

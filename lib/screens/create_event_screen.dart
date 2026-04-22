@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
 import 'package:eventhub/models/event_model.dart';
+import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/theme/app_theme.dart';
 
 class CreateEventScreen extends StatefulWidget {
@@ -41,7 +42,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _category = e?.category ?? 'Conference';
   }
 
-  void _submit(AppState state, String lang) {
+  Future<void> _submit(AppState state, String lang) async {
+    final token = state.token;
+    if (token == null || token.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login first')),
+      );
+      return;
+    }
+
     final titleRu = _titleRu.text.trim();
     if (titleRu.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,32 +63,41 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       );
       return;
     }
-    if (widget.editEvent != null) {
-      state.updateEvent(widget.editEvent!.copyWith(
-        title: _titleEn.text, titleRu: titleRu, titleKz: _titleKz.text,
-        description: _descEn.text, descriptionRu: _descRu.text, descriptionKz: _descKz.text,
-        date: _date.text, time: _time.text,
-        location: _locEn.text, locationRu: _locRu.text, locationKz: _locKz.text,
-        category: _category, capacity: int.tryParse(_capacity.text) ?? 50,
-      ));
-    } else {
-      state.addEvent(EventModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: _titleEn.text.isEmpty ? titleRu : _titleEn.text,
-        titleRu: titleRu, titleKz: _titleKz.text,
-        description: _descEn.text, descriptionRu: _descRu.text, descriptionKz: _descKz.text,
-        date: _date.text, time: _time.text,
-        location: _locEn.text, locationRu: _locRu.text, locationKz: _locKz.text,
-        category: _category,
-        image: _unsplash,
-        capacity: int.tryParse(_capacity.text) ?? 50,
-        registered: 0,
-        organizerId: 'org1',
-        organizerName: state.user?.name ?? 'Organizer',
-        rating: 0, totalRatings: 0,
-      ));
+
+    final data = <String, dynamic>{
+      'title': _titleEn.text.trim().isEmpty ? titleRu : _titleEn.text.trim(),
+      'titleRu': titleRu,
+      'titleKz': _titleKz.text.trim(),
+      'description': _descEn.text.trim(),
+      'descriptionRu': _descRu.text.trim(),
+      'descriptionKz': _descKz.text.trim(),
+      'date': _date.text.trim(),
+      'time': _time.text.trim(),
+      'location': _locEn.text.trim(),
+      'locationRu': _locRu.text.trim(),
+      'locationKz': _locKz.text.trim(),
+      'category': _category,
+      'image': _unsplash,
+      'capacity': int.tryParse(_capacity.text.trim()) ?? 50,
+    };
+
+    try {
+      final created = await ApiService.createEvent(data, token);
+      final model = EventModel.fromJson(created);
+      state.addEvent(model);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(lang == 'ru' ? 'Событие создано' : lang == 'kz' ? 'Іс-шара жасалды' : 'Event created')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      print('ERROR: ${e.toString()}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     }
-    Navigator.pop(context);
   }
 
   @override
@@ -101,7 +120,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.pop(context)),
         actions: [
           TextButton(
-            onPressed: () => _submit(state, lang),
+            onPressed: () async => _submit(state, lang),
             child: Text(T['save']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
           ),
         ],
@@ -198,7 +217,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
             // Submit button
             GestureDetector(
-              onTap: () => _submit(state, lang),
+              onTap: () async => _submit(state, lang),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]), borderRadius: BorderRadius.circular(14)),
