@@ -69,7 +69,7 @@ class EventCard extends StatelessWidget {
                         decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(20)),
                         child: Text(
                           categoryLabel(event.category, language).toUpperCase(),
-                          style: GoogleFonts.dmSans(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 0.5),
+                          style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 0.5),
                         ),
                       ),
                     ),
@@ -80,7 +80,7 @@ class EventCard extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(color: AppColors.secondary, borderRadius: BorderRadius.circular(20)),
-                          child: Text('✓ Registered', style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+                          child: Text('✓ Registered', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
                       ),
                     // Favorite button
@@ -115,11 +115,11 @@ class EventCard extends StatelessWidget {
                     children: [
                       const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Text('${event.date} · ${event.time}', style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.muted)),
+                      Text('${event.date} · ${event.time}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                       const SizedBox(width: 12),
                       const Icon(Icons.location_on_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Expanded(child: Text(location, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis)),
+                      Expanded(child: Text(location, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis)),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -143,13 +143,13 @@ class EventCard extends StatelessWidget {
                       Row(children: [
                         const Icon(Icons.people_rounded, size: 12, color: AppColors.primary),
                         const SizedBox(width: 3),
-                        Text('${event.registered}/${event.capacity}', style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.muted)),
+                        Text('${event.registered}/${event.capacity}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                       ]),
                       const SizedBox(width: 10),
                       Row(children: [
                         const Icon(Icons.star_rounded, size: 12, color: AppColors.warning),
                         const SizedBox(width: 3),
-                        Text(event.rating.toStringAsFixed(1), style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.muted)),
+                        Text(event.rating.toStringAsFixed(1), style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                       ]),
                     ],
                   ),

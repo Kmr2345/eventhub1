@@ -24,6 +24,11 @@ class EventHubApp extends StatelessWidget {
       title: 'EventHub',
       theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
+      supportedLocales: const [
+        Locale('ru'),
+        Locale('kk'),
+        Locale('en'),
+      ],
       home: Consumer<AppState>(
         builder: (_, state, __) =>
         state.user == null ? const AuthScreen() : const MainScreen(),

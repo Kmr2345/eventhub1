@@ -67,7 +67,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             child: Text(
                               l.toUpperCase(),
-                              style: GoogleFonts.dmSans(
+                              style: GoogleFonts.inter(
                                 fontSize: 12, fontWeight: FontWeight.w700,
                                 color: active ? AppColors.primary : Colors.white.withOpacity(0.8),
                               ),
@@ -91,13 +91,13 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: const Center(child: Text('🎯', style: TextStyle(fontSize: 32))),
                 ),
                 const SizedBox(height: 16),
-                Text(t['welcome']!, style: GoogleFonts.dmSans(fontSize: 13, color: Colors.white.withOpacity(0.85))),
+                Text(t['welcome']!, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withOpacity(0.85))),
                 const SizedBox(height: 4),
                 Text('EventHub', style: GoogleFonts.spaceGrotesk(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
                 const SizedBox(height: 4),
-                Text('Astana IT University', style: GoogleFonts.dmSans(fontSize: 14, color: Colors.white.withOpacity(0.8))),
+                Text('Astana IT University', style: GoogleFonts.inter(fontSize: 14, color: Colors.white.withOpacity(0.8))),
                 const SizedBox(height: 4),
-                Text(t['tagline']!, style: GoogleFonts.dmSans(fontSize: 13, color: Colors.white.withOpacity(0.7)), textAlign: TextAlign.center),
+                Text(t['tagline']!, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withOpacity(0.7)), textAlign: TextAlign.center),
                 const SizedBox(height: 20),
 
                 // Features row
@@ -144,7 +144,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   child: Center(
                                     child: Text(
                                       r == 'student' ? t['student']! : t['organizer']!,
-                                      style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.muted),
+                                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.muted),
                                     ),
                                   ),
                                 ),
@@ -190,12 +190,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Center(
-                            child: Text(t['login']!, style: GoogleFonts.dmSans(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                            child: Text(t['login']!, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(t['demo']!, textAlign: TextAlign.center, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.muted)),
+                      Text(t['demo']!, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                     ],
                   ),
                 ),
@@ -216,22 +216,22 @@ class _AuthScreenState extends State<AuthScreen> {
         child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
       ),
       const SizedBox(height: 6),
-      Text(label, style: GoogleFonts.dmSans(fontSize: 10, color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+      Text(label, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w500), textAlign: TextAlign.center),
     ],
   );
 
   Widget _buildField(String label, TextEditingController ctrl, String hint, bool obscure) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
+      Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
       const SizedBox(height: 6),
       TextField(
         controller: ctrl,
         obscureText: obscure,
-        style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.text),
+        style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.dmSans(color: AppColors.muted),
+          hintStyle: GoogleFonts.inter(color: AppColors.muted),
           filled: true, fillColor: AppColors.bg,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),

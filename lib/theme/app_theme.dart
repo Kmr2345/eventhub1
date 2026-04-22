@@ -35,15 +35,16 @@ class AppTheme {
     useMaterial3: true,
     scaffoldBackgroundColor: AppColors.bg,
     colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-    textTheme: GoogleFonts.dmSansTextTheme().copyWith(
-      displayLarge: GoogleFonts.spaceGrotesk(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.text),
-      headlineLarge: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.text),
-      headlineMedium: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text),
-      titleLarge: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text),
-      titleMedium: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
-      bodyLarge: GoogleFonts.dmSans(fontSize: 14, color: AppColors.text),
-      bodyMedium: GoogleFonts.dmSans(fontSize: 13, color: AppColors.muted),
-      labelSmall: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted, letterSpacing: 0.6),
+    fontFamily: GoogleFonts.inter().fontFamily,
+    textTheme: GoogleFonts.interTextTheme().copyWith(
+      displayLarge: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.text),
+      headlineLarge: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.text),
+      headlineMedium: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text),
+      titleLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text),
+      titleMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
+      bodyLarge: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+      bodyMedium: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+      labelSmall: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted, letterSpacing: 0.6),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: AppColors.card,
@@ -51,7 +52,7 @@ class AppTheme {
       scrolledUnderElevation: 0.5,
       shadowColor: AppColors.border,
       iconTheme: const IconThemeData(color: AppColors.text),
-      titleTextStyle: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text),
+      titleTextStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text),
     ),
   );
 }

@@ -80,7 +80,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(20)),
-                          child: Text(categoryLabel(e.category, lang).toUpperCase(), style: GoogleFonts.dmSans(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5)),
+                          child: Text(categoryLabel(e.category, lang).toUpperCase(), style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5)),
                         ),
                         const SizedBox(height: 6),
                         Text(e.getTitle(lang), style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
@@ -123,8 +123,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(T['organizer']!, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w500)),
-                            Text(e.organizerName, style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
+                            Text(T['organizer']!, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w500)),
+                            Text(e.organizerName, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
                           ],
                         ),
                       ],
@@ -143,20 +143,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           child: Container(
                             width: 30, height: 30,
                             decoration: BoxDecoration(color: colors[i], shape: BoxShape.circle, border: Border.all(color: AppColors.bg, width: 2)),
-                            child: Center(child: Text(initials, style: GoogleFonts.dmSans(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white))),
+                            child: Center(child: Text(initials, style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white))),
                           ),
                         );
                       }),
                       const SizedBox(width: 8),
-                      Text('+${e.registered - 5} ${T['participants']}', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.muted)),
+                      Text('+${e.registered - 5} ${T['participants']}', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
                     ],
                   ),
                   const SizedBox(height: 16),
 
                   // Description
-                  Text(T['description']!, style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6)),
+                  Text(T['description']!, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6)),
                   const SizedBox(height: 8),
-                  Text(e.getDescription(lang), style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.text, height: 1.65)),
+                  Text(e.getDescription(lang), style: GoogleFonts.inter(fontSize: 14, color: AppColors.text, height: 1.65)),
                   const SizedBox(height: 20),
 
                   // Rating (student only)
@@ -166,7 +166,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border, width: 0.5)),
                       child: Column(
                         children: [
-                          Text(T['rate']!, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                          Text(T['rate']!, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
                           const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -185,7 +185,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           if (userRating != null) ...[
                             const SizedBox(height: 8),
                             Text('${lang == 'ru' ? 'Ваша оценка' : lang == 'kz' ? 'Сіздің бағаңыз' : 'Your rating'}: $userRating/5',
-                                style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                                style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
                           ],
                         ],
                       ),
@@ -202,17 +202,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         children: [
                           Text(e.getTitle(lang), style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text), textAlign: TextAlign.center),
                           const SizedBox(height: 4),
-                          Text('${e.date} · ${e.time}', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.muted)),
+                          Text('${e.date} · ${e.time}', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
                           const SizedBox(height: 16),
                           QrImageView(data: 'AITU-EVENTHUB-${e.id}-${state.user?.email}', version: QrVersions.auto, size: 130, foregroundColor: AppColors.primary),
                           const SizedBox(height: 12),
-                          Text('ID: EH-2025-${e.category.toUpperCase()}-${e.id.padLeft(4, '0')}', style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.muted)),
+                          Text('ID: EH-2025-${e.category.toUpperCase()}-${e.id.padLeft(4, '0')}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(color: AppColors.secondary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
                             child: Text('✓ ${lang == 'ru' ? 'Вы зарегистрированы' : lang == 'kz' ? 'Тіркелдіңіз' : 'You are registered'}',
-                                style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
+                                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
                           ),
                         ],
                       ),
@@ -238,7 +238,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             child: Center(
                               child: Text(
                                 isFull ? T['full']! : (isReg ? T['unregister']! : T['register']!),
-                                style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: isFull ? AppColors.muted : (isReg ? AppColors.primary : Colors.white)),
+                                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: isFull ? AppColors.muted : (isReg ? AppColors.primary : Colors.white)),
                               ),
                             ),
                           ),
@@ -281,7 +281,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       children: [
         Container(width: 34, height: 34, decoration: BoxDecoration(color: starColor.withOpacity(0.1), borderRadius: BorderRadius.circular(9)), child: Center(child: Icon(icon, size: 17, color: starColor))),
         const SizedBox(width: 12),
-        Expanded(child: Text(text, style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.text))),
+        Expanded(child: Text(text, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.text))),
       ],
     ),
   );

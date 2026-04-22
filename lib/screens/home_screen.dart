@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(greeting, style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
                 const SizedBox(height: 2),
-                Text(sub, style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.muted)),
+                Text(sub, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
               ],
             ),
           ),
@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               lang == 'ru' ? '🔥 Популярные' : lang == 'kz' ? '🔥 Танымал' : '🔥 Trending',
-              style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6),
+              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6),
             ),
           ),
         ),
@@ -121,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(e.getTitle(lang), style: GoogleFonts.spaceGrotesk(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                Text(e.date, style: GoogleFonts.dmSans(fontSize: 10, color: Colors.white.withOpacity(0.8))),
+                                Text(e.date, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withOpacity(0.8))),
                               ],
                             ),
                           ),
@@ -141,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               lang == 'ru' ? '📅 Ближайшие события' : lang == 'kz' ? '📅 Жақын іс-шаралар' : '📅 Upcoming Events',
-              style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6),
+              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6),
             ),
           ),
         ),

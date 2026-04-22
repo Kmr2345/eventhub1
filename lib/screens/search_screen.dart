@@ -47,7 +47,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: TextField(
               controller: _ctrl,
               onChanged: (v) => setState(() => _query = v),
-              style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.text),
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
               decoration: InputDecoration(
                 hintText: hint,
                 prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted, size: 20),
@@ -90,7 +90,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: active ? AppColors.primary : AppColors.border, width: 0.5),
                       ),
-                      child: Text('$emoji$label', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: active ? Colors.white : AppColors.muted)),
+                      child: Text('$emoji$label', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: active ? Colors.white : AppColors.muted)),
                     ),
                   );
                 },
@@ -107,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
               lang == 'ru' ? 'Результаты · ${results.length} событий'
                   : lang == 'kz' ? 'Нәтижелер · ${results.length} іс-шара'
                   : 'Results · ${results.length} events',
-              style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.5),
+              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.5),
             ),
           ),
         ),

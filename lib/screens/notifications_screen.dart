@@ -22,7 +22,7 @@ class NotificationsScreen extends StatelessWidget {
         actions: [
           TextButton(
             child: Text(lang == 'ru' ? 'Все прочитано' : lang == 'kz' ? 'Барлығын оқу' : 'Mark all read',
-                style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
             onPressed: () {},
           ),
         ],
@@ -51,14 +51,14 @@ class NotificationsScreen extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Expanded(child: Text(n['title']!, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: isRead ? FontWeight.w500 : FontWeight.w700, color: AppColors.text))),
+                          Expanded(child: Text(n['title']!, style: GoogleFonts.inter(fontSize: 13, fontWeight: isRead ? FontWeight.w500 : FontWeight.w700, color: AppColors.text))),
                           if (!isRead) Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
                         ],
                       ),
                       const SizedBox(height: 3),
-                      Text(n['body']!, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.muted, height: 1.4)),
+                      Text(n['body']!, style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, height: 1.4)),
                       const SizedBox(height: 5),
-                      Text(n['time']!, style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.muted.withOpacity(0.7), fontWeight: FontWeight.w500)),
+                      Text(n['time']!, style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted.withOpacity(0.7), fontWeight: FontWeight.w500)),
                     ],
                   ),
                 ),

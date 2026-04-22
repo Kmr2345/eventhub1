@@ -51,17 +51,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 12),
                 Text(user.name, style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
                 const SizedBox(height: 4),
-                Text(user.email, style: GoogleFonts.dmSans(fontSize: 12, color: Colors.white.withOpacity(0.8))),
+                Text(user.email, style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withOpacity(0.8))),
                 const SizedBox(height: 4),
                 Text('${user.role == 'student' ? (lang == 'ru' ? 'Студент' : lang == 'kz' ? 'Студент' : 'Student') : (lang == 'ru' ? 'Организатор' : lang == 'kz' ? 'Ұйымдастырушы' : 'Organizer')} · Astana IT University',
-                    style: GoogleFonts.dmSans(fontSize: 12, color: Colors.white.withOpacity(0.75))),
+                    style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withOpacity(0.75))),
                 const SizedBox(height: 14),
                 Wrap(
                   spacing: 8, runSpacing: 8, alignment: WrapAlignment.center,
                   children: badges.map((b) => Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-                    child: Text(b, style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
+                    child: Text(b, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
                   )).toList(),
                 ),
               ],
@@ -88,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (user.role == 'student') ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Align(alignment: Alignment.centerLeft, child: Text(T['history']!, style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6))),
+              child: Align(alignment: Alignment.centerLeft, child: Text(T['history']!, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6))),
             ),
             Container(
               color: AppColors.card,
@@ -104,8 +104,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(a['title']!, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
-                            Text(a['date']!, style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.muted)),
+                            Text(a['title']!, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                            Text(a['date']!, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                           ],
                         ),
                       ),
@@ -121,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Settings
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Align(alignment: Alignment.centerLeft, child: Text(T['settings']!, style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6))),
+            child: Align(alignment: Alignment.centerLeft, child: Text(T['settings']!, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.6))),
           ),
           Container(
             color: AppColors.card,
@@ -134,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       const Icon(Icons.language_rounded, color: AppColors.primary, size: 20),
                       const SizedBox(width: 12),
-                      Expanded(child: Text(T['language']!, style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.text))),
+                      Expanded(child: Text(T['language']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.text))),
                       Container(
                         decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.all(3),
@@ -147,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 duration: const Duration(milliseconds: 150),
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(color: active ? AppColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(8)),
-                                child: Text(l.toUpperCase(), style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.muted)),
+                                child: Text(l.toUpperCase(), style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.muted)),
                               ),
                             );
                           }).toList(),
@@ -165,14 +165,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       const Icon(Icons.notifications_outlined, color: AppColors.primary, size: 20),
                       const SizedBox(width: 12),
-                      Expanded(child: Text(T['notifications']!, style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.text))),
+                      Expanded(child: Text(T['notifications']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.text))),
                       GestureDetector(
                         onTap: () => setState(() => _notificationsOn = !_notificationsOn),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                           decoration: BoxDecoration(color: _notificationsOn ? AppColors.secondary : Colors.grey.shade300, borderRadius: BorderRadius.circular(20)),
-                          child: Text(_notificationsOn ? T['on']! : T['off']!, style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                          child: Text(_notificationsOn ? T['on']! : T['off']!, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
                       ),
                     ],
@@ -199,7 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         const Icon(Icons.logout_rounded, color: AppColors.danger, size: 20),
                         const SizedBox(width: 12),
-                        Text(T['logout']!, style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.danger)),
+                        Text(T['logout']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.danger)),
                       ],
                     ),
                   ),
@@ -219,7 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(children: [
         Text(val, style: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primary)),
         const SizedBox(height: 2),
-        Text(label, style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted)),
+        Text(label, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted)),
       ]),
     ),
   );

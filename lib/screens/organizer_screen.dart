@@ -5,7 +5,6 @@ import '../data/app_state.dart';
 import '../models/event_model.dart';
 import '../theme/app_theme.dart';
 import 'create_event_screen.dart';
-import 'event_detail_screen.dart';
 
 class OrganizerScreen extends StatelessWidget {
   const OrganizerScreen({super.key});
@@ -61,7 +60,7 @@ class OrganizerScreen extends StatelessWidget {
                       const SizedBox(height: 14),
                       Text(T['noEvents']!, style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
                       const SizedBox(height: 8),
-                      Text(T['create']!, style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.muted)),
+                      Text(T['create']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
                     ],
                   ),
                 ),
@@ -86,7 +85,7 @@ class OrganizerScreen extends StatelessWidget {
           Icon(icon, size: 22, color: color),
           const SizedBox(height: 6),
           Text(value, style: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.text)),
-          Text(label, style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted), textAlign: TextAlign.center),
+          Text(label, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted), textAlign: TextAlign.center),
         ],
       ),
     ),
@@ -159,7 +158,7 @@ class _OrganizerEventCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Text('${event.registered}/${event.capacity} ${labels['registered']}', style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.muted)),
+                    Text('${event.registered}/${event.capacity} ${labels['registered']}', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
                   ],
                 ),
 
@@ -171,11 +170,11 @@ class _OrganizerEventCard extends StatelessWidget {
                     child: Row(children: [
                       const Icon(Icons.person_outline_rounded, size: 14, color: AppColors.muted),
                       const SizedBox(width: 6),
-                      Text(email, style: GoogleFonts.dmSans(fontSize: 12, color: AppColors.text)),
+                      Text(email, style: GoogleFonts.inter(fontSize: 12, color: AppColors.text)),
                     ]),
                   )),
                   if (participants.length > 3)
-                    Text('+${participants.length - 3} ещё', style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                    Text('+${participants.length - 3} ещё', style: GoogleFonts.inter(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
                 ],
 
                 const SizedBox(height: 12),
@@ -190,7 +189,7 @@ class _OrganizerEventCard extends StatelessWidget {
                       children: [
                         const Icon(Icons.download_rounded, size: 16, color: AppColors.primary),
                         const SizedBox(width: 6),
-                        Text(labels['export']!, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                        Text(labels['export']!, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary)),
                       ],
                     ),
                   ),

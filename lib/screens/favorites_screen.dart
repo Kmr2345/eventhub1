@@ -15,7 +15,6 @@ class FavoritesScreen extends StatelessWidget {
     final state = context.watch<AppState>();
     final lang  = state.language;
     final favs  = state.favorites;
-    final title = lang == 'ru' ? 'Избранное' : lang == 'kz' ? 'Таңдаулы' : 'Saved Events';
 
     return favs.isEmpty
         ? Center(
@@ -28,7 +27,7 @@ class FavoritesScreen extends StatelessWidget {
                     style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
                 const SizedBox(height: 8),
                 Text(lang == 'ru' ? 'Нажмите ❤️ на карточке события' : lang == 'kz' ? 'Іс-шара картасындағы ❤️ басыңыз' : 'Tap ❤️ on any event card',
-                    style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.muted)),
+                    style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
               ],
             ),
           )

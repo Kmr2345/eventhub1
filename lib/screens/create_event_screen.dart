@@ -96,7 +96,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         actions: [
           TextButton(
             onPressed: () => _submit(state, lang),
-            child: Text(T['save']!, style: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
+            child: Text(T['save']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary)),
           ),
         ],
       ),
@@ -120,7 +120,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   children: [
                     const Icon(Icons.add_photo_alternate_rounded, color: AppColors.primary, size: 32),
                     const SizedBox(height: 6),
-                    Text(T['cover']!, style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w500)),
+                    Text(T['cover']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w500)),
                   ],
                 )),
               ),
@@ -166,7 +166,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           child: DropdownButton<String>(
                             value: _category,
                             isExpanded: true,
-                            style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.text),
+                            style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
                             items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                             onChanged: (v) => setState(() => _category = v!),
                           ),
@@ -196,7 +196,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]), borderRadius: BorderRadius.circular(14)),
-                child: Center(child: Text(T['save']!, style: GoogleFonts.dmSans(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
+                child: Center(child: Text(T['save']!, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
               ),
             ),
             const SizedBox(height: 40),
@@ -211,7 +211,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border, width: 0.5)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title.toUpperCase(), style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 0.6)),
+      Text(title.toUpperCase(), style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 0.6)),
       const SizedBox(height: 10),
       ...children,
     ]),
@@ -219,7 +219,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   Widget _label(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 5),
-    child: Text(text, style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
+    child: Text(text, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
   );
 
   Widget _field(String label, TextEditingController ctrl, String hint, {int maxLines = 1, TextInputType inputType = TextInputType.text}) => Padding(
@@ -232,9 +232,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           controller: ctrl,
           maxLines: maxLines,
           keyboardType: inputType,
-          style: GoogleFonts.dmSans(fontSize: 14, color: AppColors.text),
+          style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
           decoration: InputDecoration(
-            hintText: hint, hintStyle: GoogleFonts.dmSans(color: AppColors.muted),
+            hintText: hint, hintStyle: GoogleFonts.inter(color: AppColors.muted),
             filled: true, fillColor: AppColors.bg,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),

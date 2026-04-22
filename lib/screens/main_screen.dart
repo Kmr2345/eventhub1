@@ -69,7 +69,7 @@ class _MainScreenState extends State<MainScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Astana IT University', style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w500)),
+              Text('Astana IT University', style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w500)),
               ShaderMask(
                 shaderCallback: (b) => const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]).createShader(b),
                 child: Text('EventHub', style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
@@ -97,7 +97,7 @@ class _MainScreenState extends State<MainScreen> {
                     color: active ? AppColors.primary : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(l.toUpperCase(), style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.muted)),
+                  child: Text(l.toUpperCase(), style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.muted)),
                 ),
               );
             }).toList(),
@@ -115,7 +115,7 @@ class _MainScreenState extends State<MainScreen> {
               child: Container(
                 width: 16, height: 16,
                 decoration: BoxDecoration(color: AppColors.danger, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
-                child: Center(child: Text('3', style: GoogleFonts.dmSans(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white))),
+                child: Center(child: Text('3', style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white))),
               ),
             ),
           ],
@@ -172,7 +172,7 @@ class _MainScreenState extends State<MainScreen> {
                           size: 24, color: active ? AppColors.primary : AppColors.muted),
                       const SizedBox(height: 3),
                       Text(item['label'] as String,
-                          style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w600, color: active ? AppColors.primary : AppColors.muted)),
+                          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: active ? AppColors.primary : AppColors.muted)),
                     ],
                   ),
                 ),
