@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/data/mock_data.dart';
+import 'package:eventhub/services/api_service.dart';
 
 class AppState extends ChangeNotifier {
   UserModel? user;
@@ -8,6 +9,7 @@ class AppState extends ChangeNotifier {
   String language = 'ru';
   List<EventModel> events = getMockEvents();
   final Map<String, List<String>> registrations = {};
+  List<dynamic> myRegistrations = [];
   final Map<String, int> userRatings = {};
 
   // Auth
@@ -48,6 +50,30 @@ class AppState extends ChangeNotifier {
   // Registration
   bool isRegistered(String eventId) =>
       registrations[eventId]?.contains(user?.email) ?? false;
+
+  Future<void> refreshMyRegistrations() async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    final data = await ApiService.getMyRegistrations(t);
+    myRegistrations = data;
+    notifyListeners();
+  }
+
+  String? findRegistrationIdForEvent(String eventId) {
+    for (final r in myRegistrations) {
+      if (r is! Map) continue;
+      final regId = (r['_id'] ?? r['id'])?.toString();
+      final ev = r['eventId'];
+      String? evId;
+      if (ev is Map) {
+        evId = (ev['_id'] ?? ev['id'])?.toString();
+      } else {
+        evId = ev?.toString();
+      }
+      if (evId != null && evId == eventId) return regId;
+    }
+    return null;
+  }
 
   void toggleRegistration(String eventId) {
     final email = user?.email ?? '';

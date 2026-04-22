@@ -237,23 +237,54 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   if (token == null || token.isEmpty) {
                                     if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Auth token missing')),
+                                      const SnackBar(content: Text('Please login first')),
                                     );
                                     return;
                                   }
 
                                   try {
-                                    final result = await ApiService.registerToEvent(e.id, token);
-                                    print('response: $result');
+                                    if (!isReg) {
+                                      final result = await ApiService.registerToEvent(e.id, token);
+                                      print('response: $result');
 
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Registered successfully')),
-                                    );
+                                      // After register, refresh /registrations/my so we can cancel using registrationId later.
+                                      await context.read<AppState>().refreshMyRegistrations();
 
-                                    // Keep local UI state consistent with the existing flow.
-                                    state.toggleRegistration(e.id);
-                                    setState(() {});
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Registered successfully')),
+                                      );
+
+                                      state.toggleRegistration(e.id);
+                                      setState(() {});
+                                    } else {
+                                      // IMPORTANT: cancel uses registrationId (not eventId)
+                                      await context.read<AppState>().refreshMyRegistrations();
+                                      final registrationId = context.read<AppState>().findRegistrationIdForEvent(e.id);
+                                      print('registrationId: $registrationId');
+                                      print('REGISTRATION ID: $registrationId');
+
+                                      if (registrationId == null || registrationId.isEmpty) {
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Registration not found for this event')),
+                                        );
+                                        return;
+                                      }
+
+                                      final result = await ApiService.cancelRegistration(registrationId, token);
+                                      print('response: $result');
+
+                                      await context.read<AppState>().refreshMyRegistrations();
+
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Cancelled')),
+                                      );
+
+                                      state.toggleRegistration(e.id);
+                                      setState(() {});
+                                    }
                                   } catch (err) {
                                     print('error: ${err.toString()}');
                                     if (!mounted) return;

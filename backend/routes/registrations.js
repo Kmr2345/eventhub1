@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Registration = require("../models/Registration");
 const auth = require("../middleware/auth");
 
@@ -8,25 +9,46 @@ router.post("/", auth, async (req, res) => {
   try {
     const { eventId } = req.body;
 
-    const existing = await Registration.findOne({
+    console.log("REGISTER:", req.user.id, eventId);
+
+    if (!eventId || !mongoose.Types.ObjectId.isValid(eventId)) {
+      return res.status(400).json("Invalid eventId");
+    }
+
+    const eventObjectId = new mongoose.Types.ObjectId(eventId);
+
+    let registration = await Registration.findOne({
       userId: req.user.id,
-      eventId
+      eventId: eventObjectId
     });
 
-    if (existing) {
+    console.log("FOUND:", registration);
+
+    // 🔥 CASE 1: if exists AND cancelled → reuse
+    if (registration && registration.status === "cancelled") {
+      registration.status = "registered";
+      await registration.save();
+      return res.json(registration);
+    }
+
+    // 🔥 CASE 2: if exists AND active → block
+    if (registration && ["registered", "confirmed"].includes(registration.status)) {
       return res.status(400).json("Already registered");
     }
 
-    const registration = new Registration({
+    // 🔥 CASE 3: create new
+    registration = new Registration({
       userId: req.user.id,
-      eventId
+      eventId: eventObjectId,
+      status: "registered"
     });
 
     await registration.save();
 
-    res.json(registration);
+    return res.json(registration);
   } catch (err) {
-    res.status(500).json(err);
+    console.log("ERROR:", err);
+    return res.status(500).json(err);
   }
 });
 
@@ -57,23 +79,33 @@ router.put("/:id/confirm", auth, async (req, res) => {
 // CANCEL
 router.put("/:id/cancel", auth, async (req, res) => {
   try {
-    const registration = await Registration.findById(req.params.id);
+    const id = req.params.id;
+
+    console.log("CANCEL REQUEST ID:", id);
+    console.log("USER:", req.user.id);
+
+    // IMPORTANT: find by ID directly
+    const registration = await Registration.findById(id);
 
     if (!registration) {
-      return res.status(404).json("Not found");
+      console.log("NOT FOUND");
+      return res.status(404).json("Registration not found");
     }
 
-    if (registration.userId.toString() !== req.user.id) {
-      return res.status(403).json("Not allowed");
-    }
+    console.log("BEFORE UPDATE:", registration.status);
 
+    // REMOVE ANY EXTRA CONDITIONS
+    // FORCE update
     registration.status = "cancelled";
     await registration.save();
 
-    res.json(registration);
+    console.log("AFTER UPDATE:", registration.status);
+
+    return res.json(registration);
 
   } catch (err) {
-    res.status(500).json(err);
+    console.log("CANCEL ERROR:", err);
+    return res.status(500).json(err);
   }
 });
 

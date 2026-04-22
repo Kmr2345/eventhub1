@@ -93,6 +93,50 @@ class ApiService {
     throw Exception('Unexpected response format: ${decoded.runtimeType}');
   }
 
+  static Future<List> getMyRegistrations(String token) async {
+    final url = '$baseUrl/registrations/my';
+    _logRequest(method: 'GET', url: url, token: token);
+
+    final res = await http.get(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is List) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> cancelRegistration(
+    String registrationId,
+    String token,
+  ) async {
+    final url = '$baseUrl/registrations/$registrationId/cancel';
+    _logRequest(method: 'PUT', url: url, token: token);
+
+    final res = await http.put(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+    );
+
+    print('CANCEL RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw Exception('Cancel failed');
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
   // REGISTER
   static Future<Map<String, dynamic>> register(
     String name,
