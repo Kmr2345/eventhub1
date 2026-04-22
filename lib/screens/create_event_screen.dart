@@ -44,7 +44,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   void _submit(AppState state, String lang) {
     final titleRu = _titleRu.text.trim();
     if (titleRu.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(lang == 'ru' ? 'Введите название' : 'Enter title')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            lang == 'ru' ? 'Введите название' : lang == 'kz' ? 'Атауын енгізіңіз' : 'Enter title',
+          ),
+        ),
+      );
       return;
     }
     if (widget.editEvent != null) {
@@ -90,7 +96,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
-        title: Text(T['title']!, style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w800)),
+        title: Text(T['title']!, style: GoogleFonts.inter(fontWeight: FontWeight.w800)),
         backgroundColor: AppColors.card,
         leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.pop(context)),
         actions: [

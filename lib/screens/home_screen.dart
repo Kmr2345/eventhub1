@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(greeting, style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
+                Text(greeting, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
                 const SizedBox(height: 2),
                 Text(sub, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
               ],
@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(e.getTitle(lang), style: GoogleFonts.spaceGrotesk(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                Text(e.getTitle(lang), style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
                                 Text(e.date, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withOpacity(0.8))),
                               ],
                             ),

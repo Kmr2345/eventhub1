@@ -122,7 +122,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       const Text('🔍', style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 12),
                       Text(lang == 'ru' ? 'Ничего не найдено' : lang == 'kz' ? 'Ештеңе табылмады' : 'No events found',
-                          style: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.muted)),
                     ],
                   ),
                 ),

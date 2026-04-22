@@ -16,7 +16,7 @@ class NotificationsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
-        title: Text(title, style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w800)),
+        title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w800)),
         backgroundColor: AppColors.card,
         leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => Navigator.pop(context)),
         actions: [

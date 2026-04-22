@@ -29,7 +29,7 @@ class OrganizerScreen extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(T['title']!, style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
+            child: Text(T['title']!, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
           ),
         ),
 
@@ -58,7 +58,7 @@ class OrganizerScreen extends StatelessWidget {
                     children: [
                       const Text('🎪', style: TextStyle(fontSize: 52)),
                       const SizedBox(height: 14),
-                      Text(T['noEvents']!, style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                      Text(T['noEvents']!, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
                       const SizedBox(height: 8),
                       Text(T['create']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
                     ],
@@ -84,7 +84,7 @@ class OrganizerScreen extends StatelessWidget {
         children: [
           Icon(icon, size: 22, color: color),
           const SizedBox(height: 6),
-          Text(value, style: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.text)),
+          Text(value, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.text)),
           Text(label, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted), textAlign: TextAlign.center),
         ],
       ),
@@ -120,7 +120,7 @@ class _OrganizerEventCard extends StatelessWidget {
                   Center(child: Opacity(opacity: 0.3, child: Text(_emoji(event.category), style: const TextStyle(fontSize: 48)))),
                   Positioned(
                     bottom: 10, left: 14,
-                    child: Text(event.getTitle(lang), style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    child: Text(event.getTitle(lang), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
                   Positioned(
                     top: 8, right: 10,
@@ -130,8 +130,17 @@ class _OrganizerEventCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         _iconBtn(Icons.delete_outline_rounded, () async {
                           final ok = await showDialog<bool>(context: context, builder: (_) => AlertDialog(
-                            title: const Text('Удалить?'),
-                            actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена')), TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Удалить', style: TextStyle(color: Colors.red)))],
+                            title: Text(lang == 'ru' ? 'Удалить?' : lang == 'kz' ? 'Жою керек пе?' : 'Delete?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(lang == 'ru' ? 'Отмена' : lang == 'kz' ? 'Жоқ' : 'Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text(lang == 'ru' ? 'Удалить' : lang == 'kz' ? 'Жою' : 'Delete', style: const TextStyle(color: Colors.red)),
+                              ),
+                            ],
                           ));
                           if (ok == true) state.deleteEvent(event.id);
                         }, danger: true),

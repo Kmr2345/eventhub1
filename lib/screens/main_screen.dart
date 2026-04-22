@@ -72,7 +72,7 @@ class _MainScreenState extends State<MainScreen> {
               Text('Astana IT University', style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w500)),
               ShaderMask(
                 shaderCallback: (b) => const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]).createShader(b),
-                child: Text('EventHub', style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+                child: Text('EventHub', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
               ),
             ],
           ),

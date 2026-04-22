@@ -46,10 +46,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   width: 76, height: 76,
                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), shape: BoxShape.circle, border: Border.all(color: Colors.white.withOpacity(0.5), width: 2)),
-                  child: Center(child: Text(user.initials, style: GoogleFonts.spaceGrotesk(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.white))),
+                  child: Center(child: Text(user.initials, style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.white))),
                 ),
                 const SizedBox(height: 12),
-                Text(user.name, style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+                Text(user.name, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
                 const SizedBox(height: 4),
                 Text(user.email, style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withOpacity(0.8))),
                 const SizedBox(height: 4),
@@ -185,11 +185,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () => showDialog(
                     context: context,
                     builder: (_) => AlertDialog(
-                      title: Text(T['logout']!, style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700)),
-                      content: Text(lang == 'ru' ? 'Вы уверены?' : lang == 'kz' ? 'Сенімдісіз бе?' : 'Are you sure?'),
+                      title: Text(T['logout']!, style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                      content: Text(lang == 'ru' ? 'Вы уверены, что хотите выйти?' : lang == 'kz' ? 'Шығуды қалайсыз ба?' : 'Are you sure you want to log out?'),
                       actions: [
-                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
-                        TextButton(onPressed: () { Navigator.pop(context); state.logout(); }, child: Text(T['logout']!, style: const TextStyle(color: AppColors.danger))),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(lang == 'ru' ? 'Отмена' : lang == 'kz' ? 'Жоқ' : 'Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () { Navigator.pop(context); state.logout(); },
+                          child: Text(lang == 'ru' ? 'Выйти' : lang == 'kz' ? 'Иә' : 'Log out', style: const TextStyle(color: AppColors.danger)),
+                        ),
                       ],
                     ),
                   ),
@@ -217,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(children: [
-        Text(val, style: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primary)),
+        Text(val, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primary)),
         const SizedBox(height: 2),
         Text(label, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted)),
       ]),

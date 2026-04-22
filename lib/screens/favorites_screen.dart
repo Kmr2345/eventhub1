@@ -24,7 +24,7 @@ class FavoritesScreen extends StatelessWidget {
                 const Text('❤️', style: TextStyle(fontSize: 52)),
                 const SizedBox(height: 14),
                 Text(lang == 'ru' ? 'Нет избранных' : lang == 'kz' ? 'Таңдаулы жоқ' : 'No saved events',
-                    style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
                 const SizedBox(height: 8),
                 Text(lang == 'ru' ? 'Нажмите ❤️ на карточке события' : lang == 'kz' ? 'Іс-шара картасындағы ❤️ басыңыз' : 'Tap ❤️ on any event card',
                     style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),

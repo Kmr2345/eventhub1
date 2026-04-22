@@ -83,7 +83,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           child: Text(categoryLabel(e.category, lang).toUpperCase(), style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5)),
                         ),
                         const SizedBox(height: 6),
-                        Text(e.getTitle(lang), style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+                        Text(e.getTitle(lang), style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
                       ],
                     ),
                   ),
@@ -200,7 +200,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border, width: 0.5)),
                       child: Column(
                         children: [
-                          Text(e.getTitle(lang), style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text), textAlign: TextAlign.center),
+                          Text(e.getTitle(lang), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text), textAlign: TextAlign.center),
                           const SizedBox(height: 4),
                           Text('${e.date} · ${e.time}', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
                           const SizedBox(height: 16),

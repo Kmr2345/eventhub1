@@ -12,14 +12,71 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  final _nameCtrl     = TextEditingController();
   final _emailCtrl    = TextEditingController();
   final _passwordCtrl = TextEditingController();
   String _role = 'student';
+  String? _debugError;
+  bool isRegister = false;
 
   final _labels = {
-    'ru': {'welcome': 'Добро пожаловать в', 'tagline': 'Все мероприятия кампуса в одном месте', 'email': 'Email', 'password': 'Пароль', 'student': 'Студент', 'organizer': 'Организатор', 'login': 'Войти', 'demo': 'Демо: любой email и пароль'},
-    'kz': {'welcome': 'Қош келдіңіз', 'tagline': 'Кампустың барлық іс-шаралары бір жерде', 'email': 'Email', 'password': 'Құпия сөз', 'student': 'Студент', 'organizer': 'Ұйымдастырушы', 'login': 'Кіру', 'demo': 'Демо: кез келген email және пароль'},
-    'en': {'welcome': 'Welcome to', 'tagline': 'All campus events in one place', 'email': 'Email', 'password': 'Password', 'student': 'Student', 'organizer': 'Organizer', 'login': 'Log In', 'demo': 'Demo: use any email & password'},
+    'ru': {
+      'welcome': 'Добро пожаловать в',
+      'tagline': 'Все мероприятия кампуса в одном месте',
+      'name': 'Имя',
+      'nameHint': 'Ваше имя',
+      'email': 'Email',
+      'password': 'Пароль',
+      'student': 'Студент',
+      'organizer': 'Организатор',
+      'login': 'Войти',
+      'register': 'Зарегистрироваться',
+      'createAccount': 'Создать аккаунт',
+      'demo': 'Демо: любой email и пароль',
+      'signupPrompt': 'Нет аккаунта? ',
+      'signupCta': 'Зарегистрируйтесь',
+      'signinPrompt': 'Уже есть аккаунт? ',
+      'signinCta': 'Войти',
+      'registerSuccess': 'Регистрация успешна',
+    },
+    'kz': {
+      'welcome': 'Қош келдіңіз',
+      'tagline': 'Кампустың барлық іс-шаралары бір жерде',
+      'name': 'Аты-жөні',
+      'nameHint': 'Атыңыз',
+      'email': 'Email',
+      'password': 'Құпия сөз',
+      'student': 'Студент',
+      'organizer': 'Ұйымдастырушы',
+      'login': 'Кіру',
+      'register': 'Тіркелу',
+      'createAccount': 'Аккаунт ашу',
+      'demo': 'Демо: кез келген email және пароль',
+      'signupPrompt': 'Аккаунтыңыз жоқ па? ',
+      'signupCta': 'Тіркеліңіз',
+      'signinPrompt': 'Аккаунтыңыз бар ма? ',
+      'signinCta': 'Кіру',
+      'registerSuccess': 'Тіркелу сәтті өтті',
+    },
+    'en': {
+      'welcome': 'Welcome to',
+      'tagline': 'All campus events in one place',
+      'name': 'Name',
+      'nameHint': 'Your name',
+      'email': 'Email',
+      'password': 'Password',
+      'student': 'Student',
+      'organizer': 'Organizer',
+      'login': 'Log In',
+      'register': 'Sign up',
+      'createAccount': 'Create account',
+      'demo': 'Demo: use any email & password',
+      'signupPrompt': 'Don\'t have an account? ',
+      'signupCta': 'Sign up',
+      'signinPrompt': 'Already have an account? ',
+      'signinCta': 'Log in',
+      'registerSuccess': 'Registration successful',
+    },
   };
 
   @override
@@ -93,7 +150,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 16),
                 Text(t['welcome']!, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withOpacity(0.85))),
                 const SizedBox(height: 4),
-                Text('EventHub', style: GoogleFonts.spaceGrotesk(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
+                Text('EventHub', style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
                 const SizedBox(height: 4),
                 Text('Astana IT University', style: GoogleFonts.inter(fontSize: 14, color: Colors.white.withOpacity(0.8))),
                 const SizedBox(height: 4),
@@ -155,32 +212,68 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       const SizedBox(height: 20),
 
+                      if (isRegister) ...[
+                        _buildField(t['name']!, _nameCtrl, t['nameHint']!, false),
+                        const SizedBox(height: 14),
+                      ],
                       _buildField(t['email']!, _emailCtrl, 'email@aitu.edu.kz', false),
                       const SizedBox(height: 14),
                       _buildField(t['password']!, _passwordCtrl, '••••••••', true),
                       const SizedBox(height: 20),
 
-                      // Login button
+                      // Primary action button
                       GestureDetector(
                         onTap: () async {
-                          final email = _emailCtrl.text;
-                          final password = _passwordCtrl.text;
+                          setState(() => _debugError = null);
+
+                          final email = _emailCtrl.text.trim();
+                          final password = _passwordCtrl.text.trim();
 
                           try {
-                            final result = await ApiService.login(email, password);
+                            if (!isRegister) {
+                              print("LOGIN START");
+                              print(email);
+                              final result = await ApiService.login(email, password);
+                              print("RESPONSE: $result");
 
-                            final token = result['token'] as String;
-                            final user = result['user'] as Map<String, dynamic>;
+                              final token = result['token']?.toString();
+                              final userRaw = result['user'];
 
-                            state.setToken(token);
-                            state.login(
-                              user['email'] as String,
-                              user['name'] as String,
-                              user['role'] as String,
-                            );
+                              if (token == null || token.isEmpty || userRaw is! Map) {
+                                throw Exception('Invalid response: token/user missing');
+                              }
+                              final user = userRaw.cast<String, dynamic>();
+
+                              state.setToken(token);
+                              state.login(
+                                user['email'] as String,
+                                user['name'] as String,
+                                user['role'] as String,
+                              );
+                            } else {
+                              final name = _nameCtrl.text.trim();
+                              if (name.isEmpty) {
+                                throw Exception(t['nameHint']!);
+                              }
+
+                              final result = await ApiService.register(name, email, password, _role);
+                              print("RESPONSE: $result");
+
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(t['registerSuccess']!)),
+                              );
+                              setState(() => isRegister = false);
+                            }
 
                           } catch (e) {
-                            print("Login error: $e");
+                            print("ERROR: ${e.toString()}");
+                            if (!mounted) return;
+                            final msg = e.toString();
+                            setState(() => _debugError = msg);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(msg)),
+                            );
                           }
                         },
                         child: Container(
@@ -190,12 +283,42 @@ class _AuthScreenState extends State<AuthScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Center(
-                            child: Text(t['login']!, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                            child: Text(
+                              isRegister ? t['createAccount']! : t['login']!,
+                              style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(t['demo']!, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                      const SizedBox(height: 10),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => setState(() => isRegister = !isRegister),
+                          child: RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w500),
+                              children: [
+                                TextSpan(text: isRegister ? t['signinPrompt']! : t['signupPrompt']!),
+                                TextSpan(
+                                  text: isRegister ? t['signinCta']! : t['signupCta']!,
+                                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_debugError != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          _debugError!,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.danger, fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ],
                   ),
                 ),
