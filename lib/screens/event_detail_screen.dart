@@ -17,14 +17,56 @@ class EventDetailScreen extends StatefulWidget {
 class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _showQR    = false;
   int  _hoverStar = 0;
+  bool _isRegistered = false;
+  String? _registrationId;
 
   EventModel get e => widget.event;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _loadRegistration();
+    });
+  }
+
+  Future<void> _loadRegistration() async {
+    final token = context.read<AppState>().token;
+    if (token == null || token.isEmpty) return;
+
+    try {
+      final regs = await ApiService.getMyRegistrations(token);
+      Map<String, dynamic>? found;
+      for (final r in regs) {
+        if (r is! Map) continue;
+        final ev = r['eventId'];
+        final evId = ev is Map ? (ev['_id'] ?? ev['id'])?.toString() : ev?.toString();
+        if (evId == e.id) {
+          found = r.cast<String, dynamic>();
+          break;
+        }
+      }
+
+      final status = found?['status']?.toString();
+      final regId = (found?['_id'] ?? found?['id'])?.toString();
+
+      if (!mounted) return;
+      setState(() {
+        _registrationId = regId;
+        _isRegistered = found != null && status != 'cancelled';
+      });
+    } catch (err) {
+      // keep silent; screen can still work with manual actions
+      print('LOAD REG ERROR: ${err.toString()}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final state      = context.watch<AppState>();
     final lang       = state.language;
-    final isReg      = state.isRegistered(e.id);
+    final isReg      = _isRegistered;
     final userRating = state.getUserRating(e.id);
     final isFull     = e.spotsLeft <= 0 && !isReg;
     final gradient   = categoryGradient(e.category);
@@ -205,9 +247,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           const SizedBox(height: 4),
                           Text('${e.date} · ${e.time}', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
                           const SizedBox(height: 16),
-                          QrImageView(data: 'AITU-EVENTHUB-${e.id}-${state.user?.email}', version: QrVersions.auto, size: 130, foregroundColor: AppColors.primary),
+                          QrImageView(
+                            data: _registrationId ?? '',
+                            version: QrVersions.auto,
+                            size: 130,
+                            foregroundColor: AppColors.primary,
+                          ),
                           const SizedBox(height: 12),
-                          Text('ID: EH-2025-${e.category.toUpperCase()}-${e.id.padLeft(4, '0')}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                          Text('ID: ${_registrationId ?? '-'}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -248,20 +295,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       print('response: $result');
 
                                       // After register, refresh /registrations/my so we can cancel using registrationId later.
-                                      await context.read<AppState>().refreshMyRegistrations();
+                                      await _loadRegistration();
 
                                       if (!mounted) return;
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(content: Text('Registered successfully')),
                                       );
 
-                                      state.toggleRegistration(e.id);
                                       setState(() {});
                                     } else {
                                       // IMPORTANT: cancel uses registrationId (not eventId)
-                                      await context.read<AppState>().refreshMyRegistrations();
-                                      final registrationId = context.read<AppState>().findRegistrationIdForEvent(e.id);
-                                      print('registrationId: $registrationId');
+                                      await _loadRegistration();
+                                      final registrationId = _registrationId;
                                       print('REGISTRATION ID: $registrationId');
 
                                       if (registrationId == null || registrationId.isEmpty) {
@@ -275,14 +320,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       final result = await ApiService.cancelRegistration(registrationId, token);
                                       print('response: $result');
 
-                                      await context.read<AppState>().refreshMyRegistrations();
+                                      await _loadRegistration();
 
                                       if (!mounted) return;
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(content: Text('Cancelled')),
                                       );
 
-                                      state.toggleRegistration(e.id);
                                       setState(() {});
                                     }
                                   } catch (err) {

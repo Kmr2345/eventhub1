@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../data/app_state.dart';
+import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/event_card.dart';
 import 'event_detail_screen.dart';
@@ -15,6 +16,14 @@ class _SearchScreenState extends State<SearchScreen> {
   final _ctrl = TextEditingController();
   String _query = '';
   String _category = 'All';
+  bool _scanInFlight = false;
+
+  bool _looksLikeRegistrationId(String v) {
+    final s = v.trim();
+    if (s.length != 24) return false;
+    final re = RegExp(r'^[a-fA-F0-9]{24}$');
+    return re.hasMatch(s);
+  }
 
   static const _categories = ['All', 'Conference', 'Sports', 'Workshop', 'Art', 'Music', 'Social', 'Seminar'];
   static const _catEmoji   = {'Conference': '🎤', 'Sports': '⚽', 'Workshop': '💻', 'Art': '🎨', 'Music': '🎵', 'Social': '🎉', 'Seminar': '📚'};
@@ -46,7 +55,43 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: TextField(
               controller: _ctrl,
-              onChanged: (v) => setState(() => _query = v),
+              onChanged: (v) async {
+                // If a QR scanner result is pasted here (registrationId),
+                // mark attendance instead of treating it as a search query.
+                final state = context.read<AppState>();
+                final token = state.token;
+                if (!_scanInFlight &&
+                    token != null &&
+                    token.isNotEmpty &&
+                    state.user?.role == 'organizer' &&
+                    _looksLikeRegistrationId(v)) {
+                  _scanInFlight = true;
+                  final code = v.trim();
+                  print('SCANNED: $code');
+                  try {
+                    final result = await ApiService.markAttended(code, token);
+                    print('ATTENDED: $result');
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User marked as attended')),
+                    );
+                    _ctrl.clear();
+                    setState(() => _query = '');
+                  } catch (e) {
+                    print('ERROR: $e');
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Error marking attendance')),
+                    );
+                  } finally {
+                    _scanInFlight = false;
+                  }
+                  return;
+                }
+
+                if (!mounted) return;
+                setState(() => _query = v);
+              },
               style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
               decoration: InputDecoration(
                 hintText: hint,
