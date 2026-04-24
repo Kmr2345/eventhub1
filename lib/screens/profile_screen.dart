@@ -37,10 +37,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'en': {'settings': 'Settings', 'language': 'Language', 'notifications': 'Push Notifications', 'on': 'On', 'off': 'Off', 'logout': 'Log Out', 'attended': 'Attended', 'saved': 'Saved', 'reviews': 'Reviews', 'history': 'Attended Events', 'historyEmpty': 'You haven’t attended any events yet'},
     }[lang]!;
 
-    final badges = user.role == 'student'
-        ? ['🏆 Active Student', '⭐ Top Attendee', '🎓 AITU Member']
-        : ['🎪 Organizer Pro', '📊 Analytics Master'];
-
     final attendedRegs = state.myRegistrations
         .where((r) => r is Map && r['status']?.toString() == 'attended')
         .cast<Map>();
@@ -68,14 +64,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text('${user.role == 'student' ? (lang == 'ru' ? 'Студент' : lang == 'kz' ? 'Студент' : 'Student') : (lang == 'ru' ? 'Организатор' : lang == 'kz' ? 'Ұйымдастырушы' : 'Organizer')} · Astana IT University',
                     style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withOpacity(0.75))),
                 const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8, runSpacing: 8, alignment: WrapAlignment.center,
-                  children: badges.map((b) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-                    child: Text(b, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
-                  )).toList(),
-                ),
               ],
             ),
           ),
