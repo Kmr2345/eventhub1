@@ -18,6 +18,8 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordCtrl = TextEditingController();
   String _role = 'student';
   bool isRegister = false;
+  bool _emailInvalid = false;
+  bool _passwordInvalid = false;
 
   final _labels = {
     'ru': {
@@ -216,9 +218,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         _buildField(t['name']!, _nameCtrl, t['nameHint']!, false),
                         const SizedBox(height: 14),
                       ],
-                      _buildField(t['email']!, _emailCtrl, 'email@aitu.edu.kz', false),
+                      _buildField(t['email']!, _emailCtrl, 'email@aitu.edu.kz', false, invalid: _emailInvalid),
                       const SizedBox(height: 14),
-                      _buildField(t['password']!, _passwordCtrl, '••••••••', true),
+                      _buildField(t['password']!, _passwordCtrl, '••••••••', true, invalid: _passwordInvalid),
                       const SizedBox(height: 20),
 
                       // Primary action button
@@ -227,19 +229,36 @@ class _AuthScreenState extends State<AuthScreen> {
                           final lang = context.read<AppState>().language;
                           final email = _emailCtrl.text.trim();
                           final password = _passwordCtrl.text.trim();
+
+                          if (_emailInvalid || _passwordInvalid) {
+                            setState(() {
+                              _emailInvalid = false;
+                              _passwordInvalid = false;
+                            });
+                          }
+
                           if (email.isEmpty) {
                             if (!mounted) return;
+                            setState(() => _emailInvalid = true);
                             showSnack(getError("emptyEmail", lang));
                             return;
                           }
                           if (password.isEmpty) {
                             if (!mounted) return;
+                            setState(() => _passwordInvalid = true);
                             showSnack(getError("emptyPassword", lang));
                             return;
                           }
-                          if (!email.contains("@")) {
+                          if (!isValidEmail(email)) {
                             if (!mounted) return;
+                            setState(() => _emailInvalid = true);
                             showSnack(getError("invalidEmail", lang));
+                            return;
+                          }
+                          if (isRegister && !isValidPassword(password)) {
+                            if (!mounted) return;
+                            setState(() => _passwordInvalid = true);
+                            showSnack(getError("weakPassword", lang));
                             return;
                           }
 
@@ -357,7 +376,13 @@ class _AuthScreenState extends State<AuthScreen> {
     ],
   );
 
-  Widget _buildField(String label, TextEditingController ctrl, String hint, bool obscure) => Column(
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl,
+    String hint,
+    bool obscure, {
+    bool invalid = false,
+  }) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
@@ -371,13 +396,28 @@ class _AuthScreenState extends State<AuthScreen> {
           hintStyle: GoogleFonts.inter(color: AppColors.muted),
           filled: true, fillColor: AppColors.bg,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
+          ),
           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
         ),
       ),
     ],
   );
+
+  bool isValidEmail(String email) {
+    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    return regex.hasMatch(email);
+  }
+
+  bool isValidPassword(String password) {
+    return password.length >= 6;
+  }
 
   void showSnack(String text) {
     ScaffoldMessenger.of(context).showSnackBar(
