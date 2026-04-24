@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:eventhub/models/event_model.dart';
-import 'package:eventhub/data/mock_data.dart';
 import 'package:eventhub/services/api_service.dart';
 
 class AppState extends ChangeNotifier {
   UserModel? user;
   String? token;
   String language = 'ru';
-  List<EventModel> events = getMockEvents();
+  List<EventModel> events = [];
   final Map<String, List<String>> registrations = {};
   List<dynamic> myRegistrations = [];
+  List<dynamic> favorites = [];
+  List<dynamic> notifications = [];
   final Map<String, int> userRatings = {};
 
   // Auth
@@ -30,6 +31,11 @@ class AppState extends ChangeNotifier {
 
   void logout() {
     user = null;
+    token = null;
+    myRegistrations = [];
+    favorites = [];
+    notifications = [];
+    events = [];
     notifyListeners();
   }
 
@@ -38,13 +44,49 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Favorites
-  void toggleFavorite(String eventId) {
-    final idx = events.indexWhere((e) => e.id == eventId);
-    if (idx != -1) {
-      events[idx].isFavorite = !events[idx].isFavorite;
-      notifyListeners();
+  // Favorites (synced with backend via ApiService.getFavorites)
+  void setFavorites(List<dynamic> favs) {
+    favorites = favs;
+
+    final favIds = <String>{};
+    for (final f in favs) {
+      if (f is! Map) continue;
+      final ev = f['eventId'];
+      final evId = ev is Map ? (ev['_id'] ?? ev['id'])?.toString() : ev?.toString();
+      if (evId != null && evId.isNotEmpty) favIds.add(evId);
     }
+
+    for (final e in events) {
+      e.isFavorite = favIds.contains(e.id);
+    }
+
+    notifyListeners();
+  }
+
+  bool isFavoriteEvent(String eventId) {
+    for (final f in favorites) {
+      if (f is! Map) continue;
+      final ev = f['eventId'];
+      final evId = ev is Map ? (ev['_id'] ?? ev['id'])?.toString() : ev?.toString();
+      if (evId == eventId) return true;
+    }
+    return false;
+  }
+
+  List<EventModel> get favoriteEvents => events.where((e) => isFavoriteEvent(e.id)).toList();
+
+  Future<void> syncToggleFavorite(String eventId) async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+
+    if (isFavoriteEvent(eventId)) {
+      await ApiService.removeFavorite(eventId, t);
+    } else {
+      await ApiService.addFavorite(eventId, t);
+    }
+
+    final favs = await ApiService.getFavorites(t);
+    setFavorites(favs);
   }
 
   // Registration
@@ -72,6 +114,49 @@ class AppState extends ChangeNotifier {
     myRegistrations = data;
     notifyListeners();
   }
+
+  Future<void> refreshNotifications() async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    final data = await ApiService.getNotifications(t);
+    notifications = data;
+    notifyListeners();
+  }
+
+  void setNotifications(List<dynamic> list) {
+    notifications = list;
+    notifyListeners();
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    await ApiService.readAllNotifications(t);
+    await refreshNotifications();
+  }
+
+  Future<void> markNotificationRead(String notificationId) async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    await ApiService.markNotificationRead(notificationId, t);
+    await refreshNotifications();
+  }
+
+  void markNotificationAsRead(String id) {
+    notifications = notifications.map((n) {
+      if (n is! Map) return n;
+      final nid = (n['_id'] ?? n['id'])?.toString();
+      if (nid != id) return n;
+      final next = Map<String, dynamic>.from(n.cast());
+      next['read'] = true;
+      next['isRead'] = true;
+      return next;
+    }).toList();
+    notifyListeners();
+  }
+
+  // Backwards compatibility (older call site name)
+  void markNotificationAsReadLocal(String id) => markNotificationAsRead(id);
 
   String? findRegistrationIdForEvent(String eventId) {
     for (final r in myRegistrations) {
@@ -150,6 +235,12 @@ class AppState extends ChangeNotifier {
     }).toList();
   }
 
-  List<EventModel> get favorites => events.where((e) => e.isFavorite).toList();
-  List<EventModel> get myEvents  => events.where((e) => e.organizerId == 'org1').toList();
+  // keep old name for screens that show favorites list
+  List<EventModel> get favoritesEvents => favoriteEvents;
+  List<EventModel> get myEvents  {
+    final u = user;
+    if (u == null) return const [];
+    // Backend may store organizer by id or name; best-effort filter.
+    return events.where((e) => e.organizerName == u.name || e.organizerId == u.email).toList();
+  }
 }

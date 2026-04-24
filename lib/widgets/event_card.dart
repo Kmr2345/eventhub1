@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 
 import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/theme/app_theme.dart';
@@ -13,6 +14,7 @@ class EventCard extends StatelessWidget {
   final bool isRegistered;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
+  final bool showFavoriteButton;
 
   const EventCard({
     super.key,
@@ -22,6 +24,7 @@ class EventCard extends StatelessWidget {
     required this.isRegistered,
     required this.onTap,
     required this.onFavorite,
+    this.showFavoriteButton = true,
   });
 
   @override
@@ -30,6 +33,7 @@ class EventCard extends StatelessWidget {
     final location = event.getLocation(language);
     final gradient = categoryGradient(event.category);
     final fillPct  = event.fillPercent.clamp(0.0, 1.0);
+    final when = DateFormat('dd MMM yyyy, HH:mm').format(event.eventDate);
 
     return GestureDetector(
       onTap: onTap,
@@ -85,20 +89,21 @@ class EventCard extends StatelessWidget {
                         ),
                       ),
                     // Favorite button
-                    Positioned(
-                      top: 10, right: 12,
-                      child: GestureDetector(
-                        onTap: onFavorite,
-                        child: Container(
-                          width: 32, height: 32,
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
-                          child: Center(
-                            child: Icon(isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                size: 17, color: isFavorite ? AppColors.pink : AppColors.muted),
+                    if (showFavoriteButton)
+                      Positioned(
+                        top: 10, right: 12,
+                        child: GestureDetector(
+                          onTap: onFavorite,
+                          child: Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
+                            child: Center(
+                              child: Icon(isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                  size: 17, color: isFavorite ? AppColors.pink : AppColors.muted),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -116,7 +121,7 @@ class EventCard extends StatelessWidget {
                     children: [
                       const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Text('${event.date} · ${event.time}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                      Text(when, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                       const SizedBox(width: 12),
                       const Icon(Icons.location_on_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),

@@ -6,6 +6,8 @@ import 'package:eventhub/data/app_state.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/widgets/event_card.dart';
 import 'package:eventhub/screens/event_detail_screen.dart';
+import 'package:eventhub/localization/messages.dart';
+import 'package:eventhub/widgets/app_snack.dart';
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
@@ -14,7 +16,7 @@ class FavoritesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final lang  = state.language;
-    final favs  = state.favorites;
+    final favs  = state.favoriteEvents;
 
     return favs.isEmpty
         ? Center(
@@ -38,10 +40,15 @@ class FavoritesScreen extends StatelessWidget {
               final e = favs[i];
               return EventCard(
                 event: e, language: lang,
-                isFavorite: true,
+                isFavorite: state.isFavoriteEvent(e.id),
                 isRegistered: state.isRegistered(e.id),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
-                onFavorite: () => state.toggleFavorite(e.id),
+                onFavorite: () {
+                  final wasFav = state.isFavoriteEvent(e.id);
+                  state.syncToggleFavorite(e.id);
+                  showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
+                },
+                showFavoriteButton: state.user?.role != 'organizer',
               );
             },
           );

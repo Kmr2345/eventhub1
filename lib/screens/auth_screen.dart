@@ -3,8 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
+import 'package:eventhub/localization/error_texts.dart';
+import 'package:eventhub/localization/messages.dart';
+import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/services/api_service.dart';
+import 'package:eventhub/widgets/app_snack.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -16,8 +20,9 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailCtrl    = TextEditingController();
   final _passwordCtrl = TextEditingController();
   String _role = 'student';
-  String? _debugError;
   bool isRegister = false;
+  bool _emailInvalid = false;
+  bool _passwordInvalid = false;
 
   final _labels = {
     'ru': {
@@ -32,7 +37,6 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Войти',
       'register': 'Зарегистрироваться',
       'createAccount': 'Создать аккаунт',
-      'emptyCreds': 'Введите email и пароль',
       'signupPrompt': 'Нет аккаунта? ',
       'signupCta': 'Зарегистрируйтесь',
       'signinPrompt': 'Уже есть аккаунт? ',
@@ -51,7 +55,6 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Кіру',
       'register': 'Тіркелу',
       'createAccount': 'Аккаунт ашу',
-      'emptyCreds': 'Email мен құпия сөзді енгізіңіз',
       'signupPrompt': 'Аккаунтыңыз жоқ па? ',
       'signupCta': 'Тіркеліңіз',
       'signinPrompt': 'Аккаунтыңыз бар ма? ',
@@ -70,7 +73,6 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Log In',
       'register': 'Sign up',
       'createAccount': 'Create account',
-      'emptyCreds': 'Enter email and password',
       'signupPrompt': 'Don\'t have an account? ',
       'signupCta': 'Sign up',
       'signinPrompt': 'Already have an account? ',
@@ -216,23 +218,47 @@ class _AuthScreenState extends State<AuthScreen> {
                         _buildField(t['name']!, _nameCtrl, t['nameHint']!, false),
                         const SizedBox(height: 14),
                       ],
-                      _buildField(t['email']!, _emailCtrl, 'email@aitu.edu.kz', false),
+                      _buildField(t['email']!, _emailCtrl, 'email@aitu.edu.kz', false, invalid: _emailInvalid),
                       const SizedBox(height: 14),
-                      _buildField(t['password']!, _passwordCtrl, '••••••••', true),
+                      _buildField(t['password']!, _passwordCtrl, '••••••••', true, invalid: _passwordInvalid),
                       const SizedBox(height: 20),
 
                       // Primary action button
                       GestureDetector(
                         onTap: () async {
-                          setState(() => _debugError = null);
-
+                          final lang = context.read<AppState>().language;
                           final email = _emailCtrl.text.trim();
                           final password = _passwordCtrl.text.trim();
-                          if (email.isEmpty || password.isEmpty) {
+
+                          if (_emailInvalid || _passwordInvalid) {
+                            setState(() {
+                              _emailInvalid = false;
+                              _passwordInvalid = false;
+                            });
+                          }
+
+                          if (email.isEmpty) {
                             if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(t['emptyCreds']!)),
-                            );
+                            setState(() => _emailInvalid = true);
+                            showSnack(context, getError("emptyEmail", lang), isError: true);
+                            return;
+                          }
+                          if (password.isEmpty) {
+                            if (!mounted) return;
+                            setState(() => _passwordInvalid = true);
+                            showSnack(context, getError("emptyPassword", lang), isError: true);
+                            return;
+                          }
+                          if (!isValidEmail(email)) {
+                            if (!mounted) return;
+                            setState(() => _emailInvalid = true);
+                            showSnack(context, getError("invalidEmail", lang), isError: true);
+                            return;
+                          }
+                          if (isRegister && !isValidPassword(password)) {
+                            if (!mounted) return;
+                            setState(() => _passwordInvalid = true);
+                            showSnack(context, getError("weakPassword", lang), isError: true);
                             return;
                           }
 
@@ -250,6 +276,12 @@ class _AuthScreenState extends State<AuthScreen> {
                                 throw Exception('Invalid response: token/user missing');
                               }
                               final user = userRaw.cast<String, dynamic>();
+                              final backendRole = user['role']?.toString();
+                              if (backendRole != _role) {
+                                if (!mounted) return;
+                                showSnack(context, getError("wrongRole", lang), isError: true);
+                                return;
+                              }
 
                               state.setToken(token);
                               state.login(
@@ -259,6 +291,15 @@ class _AuthScreenState extends State<AuthScreen> {
                               );
                               // Load registrations so event list cards show registered badge.
                               await state.refreshMyRegistrations();
+                              final events = await ApiService.getEvents(token);
+                              final parsed = events
+                                  .whereType<Map<String, dynamic>>()
+                                  .map(EventModel.fromJson)
+                                  .toList();
+                              state.setEvents(parsed);
+                              final favs = await ApiService.getFavorites(token);
+                              state.setFavorites(favs);
+                              await state.refreshNotifications();
                             } else {
                               final name = _nameCtrl.text.trim();
                               if (name.isEmpty) {
@@ -269,21 +310,28 @@ class _AuthScreenState extends State<AuthScreen> {
                               print("RESPONSE: $result");
 
                               if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(t['registerSuccess']!)),
-                              );
+                              showSnack(context, getMessage("registerSuccess", lang));
                               setState(() => isRegister = false);
                               await state.refreshMyRegistrations();
                             }
 
                           } catch (e) {
-                            print("ERROR: ${e.toString()}");
+                            print("LOGIN ERROR: ${e.toString()}");
                             if (!mounted) return;
-                            final msg = e.toString();
-                            setState(() => _debugError = msg);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(msg)),
-                            );
+                            final raw = e.toString();
+                            String message = getError("serverError", lang);
+
+                            if (raw.contains("User not found")) {
+                              message = getError("userNotFound", lang);
+                            } else if (raw.contains("User already exists")) {
+                              message = getError("userExists", lang);
+                            } else if (raw.contains("Invalid credentials")) {
+                              message = getError("wrongPassword", lang);
+                            } else if (raw.contains("SocketException")) {
+                              message = getError("networkError", lang);
+                            }
+
+                            showSnack(context, message, isError: true);
                           }
                         },
                         child: Container(
@@ -319,14 +367,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                       ),
-                      if (_debugError != null) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          _debugError!,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.danger, fontWeight: FontWeight.w600),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -351,7 +391,13 @@ class _AuthScreenState extends State<AuthScreen> {
     ],
   );
 
-  Widget _buildField(String label, TextEditingController ctrl, String hint, bool obscure) => Column(
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl,
+    String hint,
+    bool obscure, {
+    bool invalid = false,
+  }) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
@@ -365,11 +411,26 @@ class _AuthScreenState extends State<AuthScreen> {
           hintStyle: GoogleFonts.inter(color: AppColors.muted),
           filled: true, fillColor: AppColors.bg,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
+          ),
           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
         ),
       ),
     ],
   );
+
+  bool isValidEmail(String email) {
+    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    return regex.hasMatch(email);
+  }
+
+  bool isValidPassword(String password) {
+    return password.length >= 6;
+  }
 }

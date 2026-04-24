@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
@@ -8,6 +9,8 @@ import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/widgets/event_card.dart';
 import 'package:eventhub/screens/event_detail_screen.dart';
+import 'package:eventhub/localization/messages.dart';
+import 'package:eventhub/widgets/app_snack.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -56,6 +59,9 @@ class _HomeScreenState extends State<HomeScreen> {
         : 'What\'s happening today?';
 
     final source = events.isNotEmpty ? events : state.events;
+    if (source.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final trending = source.take(3).toList();
     final upcoming = source;
 
@@ -121,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(e.getTitle(lang), style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                Text(e.date, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withOpacity(0.8))),
+                                Text(DateFormat('dd MMM yyyy, HH:mm').format(e.eventDate), style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withOpacity(0.8))),
                               ],
                             ),
                           ),
@@ -152,10 +158,15 @@ class _HomeScreenState extends State<HomeScreen> {
               return EventCard(
                 event: e,
                 language: lang,
-                isFavorite: e.isFavorite,
+                isFavorite: state.isFavoriteEvent(e.id),
                 isRegistered: state.isRegistered(e.id),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
-                onFavorite: () => state.toggleFavorite(e.id),
+                onFavorite: () {
+                  final wasFav = state.isFavoriteEvent(e.id);
+                  state.syncToggleFavorite(e.id);
+                  showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
+                },
+                showFavoriteButton: state.user?.role != 'organizer',
               );
             },
             childCount: upcoming.length,

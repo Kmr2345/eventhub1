@@ -59,6 +59,12 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context, AppState state, bool isOrganizer) {
+    final unreadCount = state.notifications.where((n) {
+      if (n is! Map) return false;
+      final v = n['read'] ?? n['isRead'];
+      return v == false;
+    }).length;
+
     return AppBar(
       backgroundColor: AppColors.card,
       elevation: 0,
@@ -110,14 +116,22 @@ class _MainScreenState extends State<MainScreen> {
               icon: const Icon(Icons.notifications_outlined, color: AppColors.primary),
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
             ),
-            Positioned(
-              top: 8, right: 8,
-              child: Container(
-                width: 16, height: 16,
-                decoration: BoxDecoration(color: AppColors.danger, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
-                child: Center(child: Text('3', style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white))),
+            if (unreadCount > 0)
+              Positioned(
+                top: 8, right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  height: 16,
+                  constraints: const BoxConstraints(minWidth: 16),
+                  decoration: BoxDecoration(color: AppColors.danger, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white, width: 1.5)),
+                  child: Center(
+                    child: Text(
+                      unreadCount > 9 ? '9+' : unreadCount.toString(),
+                      style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                  ),
+                ),
               ),
-            ),
           ],
         ),
         const SizedBox(width: 8),

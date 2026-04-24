@@ -15,14 +15,6 @@ class ApiService {
     if (token != null) print('TOKEN: $token');
   }
 
-  static Map<String, dynamic> _decodeMap(http.Response res) {
-    try {
-      return (jsonDecode(res.body) as Map).cast<String, dynamic>();
-    } catch (_) {
-      throw Exception('Invalid JSON response (${res.statusCode}): ${res.body}');
-    }
-  }
-
   static dynamic _decodeAny(http.Response res) {
     try {
       return jsonDecode(res.body);
@@ -37,6 +29,131 @@ class ApiService {
         d?['error']?.toString() ??
         'Request failed (${res.statusCode})';
     return Exception(msg);
+  }
+
+  // NOTIFICATIONS
+  static Future<List> getNotifications(String token) async {
+    final url = '$baseUrl/notifications';
+    _logRequest(method: 'GET', url: url, token: token);
+
+    final res = await http.get(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is List) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> readAllNotifications(String token) async {
+    final url = '$baseUrl/notifications/readAll';
+    _logRequest(method: 'POST', url: url, token: token);
+
+    final res = await http.post(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    return {'message': decoded.toString()};
+  }
+
+  static Future<Map<String, dynamic>> markNotificationRead(String notificationId, String token) async {
+    final url = '$baseUrl/notifications/read/$notificationId';
+    _logRequest(method: 'PUT', url: url, token: token);
+
+    final res = await http.put(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    return {'message': decoded.toString()};
+  }
+
+  // FAVORITES
+  static Future<List> getFavorites(String token) async {
+    final url = '$baseUrl/favorites';
+    _logRequest(method: 'GET', url: url, token: token);
+
+    final res = await http.get(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is List) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> addFavorite(String eventId, String token) async {
+    final url = '$baseUrl/favorites';
+    final body = jsonEncode({'eventId': eventId});
+    _logRequest(method: 'POST', url: url, token: token, body: body);
+
+    final res = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+      body: body,
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> removeFavorite(String eventId, String token) async {
+    final url = '$baseUrl/favorites/$eventId';
+    _logRequest(method: 'DELETE', url: url, token: token);
+
+    final res = await http.delete(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    // backend might reply with plain string
+    return {'message': decoded.toString()};
   }
 
   static Future<Map<String, dynamic>> createEvent(
@@ -56,6 +173,21 @@ class ApiService {
       body: body,
     );
 
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> getEventById(String eventId) async {
+    final url = '$baseUrl/events/$eventId';
+    _logRequest(method: 'GET', url: url);
+
+    final res = await http.get(Uri.parse(url));
     print('RESPONSE: ${res.body}');
     final decoded = _decodeAny(res);
     if (res.statusCode != 200) {
@@ -160,15 +292,31 @@ class ApiService {
     );
 
     print('RESPONSE: ${res.body}');
-    final decoded = _decodeMap(res);
-    if (res.statusCode != 200) throw _httpError(res, decoded: decoded);
-    return decoded;
+    final data = _decodeAny(res);
+
+    if (res.statusCode != 200) {
+      if (data is Map) {
+        final msg = data['message']?.toString() ?? data.toString();
+        throw Exception(msg);
+      }
+      if (data is String) throw Exception(data);
+      throw Exception(data.toString());
+    }
+
+    if (data is! Map) {
+      throw Exception('Unexpected register response: ${data.runtimeType}');
+    }
+
+    return data.cast<String, dynamic>();
   }
 
   // LOGIN
   static Future<Map<String, dynamic>> login(String email, String password) async {
     final url = '$baseUrl/auth/login';
-    final body = jsonEncode({'email': email, 'password': password});
+    final body = jsonEncode({
+      'email': email,
+      'password': password,
+    });
     _logRequest(method: 'POST', url: url, body: body);
 
     final res = await http.post(
@@ -178,8 +326,24 @@ class ApiService {
     );
 
     print('RESPONSE: ${res.body}');
-    final decoded = _decodeMap(res);
-    if (res.statusCode != 200) throw _httpError(res, decoded: decoded);
+    final data = _decodeAny(res);
+
+    if (res.statusCode != 200) {
+      if (data is Map) {
+        final msg = data['message']?.toString() ?? data.toString();
+        throw Exception(msg);
+      }
+      if (data is String) {
+        throw Exception(data);
+      }
+      throw Exception(data.toString());
+    }
+
+    if (data is! Map) {
+      throw Exception('Unexpected login response: ${data.runtimeType}');
+    }
+
+    final decoded = data.cast<String, dynamic>();
     if (decoded['token'] == null || decoded['user'] == null) {
       throw Exception('Unexpected login response: missing token/user');
     }
