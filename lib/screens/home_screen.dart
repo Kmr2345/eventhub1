@@ -58,6 +58,9 @@ class _HomeScreenState extends State<HomeScreen> {
         : 'What\'s happening today?';
 
     final source = events.isNotEmpty ? events : state.events;
+    if (source.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final trending = source.take(3).toList();
     final upcoming = source;
 

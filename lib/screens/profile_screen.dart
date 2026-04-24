@@ -13,26 +13,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _notificationsOn = true;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final state = context.read<AppState>();
+      final t = state.token;
+      if (t == null || t.isEmpty) return;
+      // Keep history fresh when user opens Profile.
+      await state.refreshMyRegistrations();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final lang  = state.language;
     final user  = state.user!;
 
     final T = {
-      'ru': {'settings': 'Настройки', 'language': 'Язык', 'notifications': 'Push-уведомления', 'on': 'Вкл', 'off': 'Выкл', 'logout': 'Выйти', 'attended': 'Посещено', 'saved': 'Избранных', 'reviews': 'Отзывов', 'history': 'История посещений'},
-      'kz': {'settings': 'Баптаулар', 'language': 'Тіл', 'notifications': 'Push-хабарламалар', 'on': 'Қосу', 'off': 'Өшіру', 'logout': 'Шығу', 'attended': 'Барды', 'saved': 'Таңдаулы', 'reviews': 'Пікір', 'history': 'Қатысу тарихы'},
-      'en': {'settings': 'Settings', 'language': 'Language', 'notifications': 'Push Notifications', 'on': 'On', 'off': 'Off', 'logout': 'Log Out', 'attended': 'Attended', 'saved': 'Saved', 'reviews': 'Reviews', 'history': 'Attended Events'},
+      'ru': {'settings': 'Настройки', 'language': 'Язык', 'notifications': 'Push-уведомления', 'on': 'Вкл', 'off': 'Выкл', 'logout': 'Выйти', 'attended': 'Посещено', 'saved': 'Избранных', 'reviews': 'Отзывов', 'history': 'История посещений', 'historyEmpty': 'Вы еще не посещали мероприятия'},
+      'kz': {'settings': 'Баптаулар', 'language': 'Тіл', 'notifications': 'Push-хабарламалар', 'on': 'Қосу', 'off': 'Өшіру', 'logout': 'Шығу', 'attended': 'Барды', 'saved': 'Таңдаулы', 'reviews': 'Пікір', 'history': 'Қатысу тарихы', 'historyEmpty': 'Сіз әлі іс-шараларға қатысқан жоқсыз'},
+      'en': {'settings': 'Settings', 'language': 'Language', 'notifications': 'Push Notifications', 'on': 'On', 'off': 'Off', 'logout': 'Log Out', 'attended': 'Attended', 'saved': 'Saved', 'reviews': 'Reviews', 'history': 'Attended Events', 'historyEmpty': 'You haven’t attended any events yet'},
     }[lang]!;
 
     final badges = user.role == 'student'
         ? ['🏆 Active Student', '⭐ Top Attendee', '🎓 AITU Member']
         : ['🎪 Organizer Pro', '📊 Analytics Master'];
 
-    final attended = [
-      {'emoji': '🎤', 'title': 'TEDx AITU 2024',            'date': 'Nov 2024'},
-      {'emoji': '💻', 'title': 'Hackathon Digital KZ 2025',  'date': 'Feb 2025'},
-      {'emoji': '🎨', 'title': 'Art Market AITU',            'date': 'Mar 2025'},
-    ];
+    final attendedRegs = state.myRegistrations
+        .where((r) => r is Map && r['status']?.toString() == 'attended')
+        .cast<Map>();
+    final attendedCount = attendedRegs.length;
 
     return SingleChildScrollView(
       child: Column(
@@ -73,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: AppColors.card,
             child: Row(
               children: [
-                _statBox('${attended.length + state.registrations.length}', T['attended']!),
+                _statBox('$attendedCount', T['attended']!),
                 _divider(),
                 _statBox('${state.favorites.length}', T['saved']!),
                 _divider(),
@@ -92,28 +104,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             Container(
               color: AppColors.card,
-              child: Column(
-                children: attended.map((a) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5))),
-                  child: Row(
-                    children: [
-                      Container(width: 42, height: 42, decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(10)), child: Center(child: Text(a['emoji']!, style: const TextStyle(fontSize: 22)))),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(a['title']!, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
-                            Text(a['date']!, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
-                          ],
-                        ),
+              child: attendedCount == 0
+                  ? Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(T['historyEmpty']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
                       ),
-                      const Icon(Icons.check_circle_rounded, color: AppColors.secondary, size: 20),
-                    ],
-                  ),
-                )).toList(),
-              ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: attendedCount,
+                      itemBuilder: (_, i) {
+                        final reg = attendedRegs.elementAt(i);
+                        final ev = reg['eventId'];
+                        final title = ev is Map
+                            ? (ev['title'] ?? ev['titleRu'] ?? ev['titleKz'] ?? '').toString()
+                            : '';
+                        final date = ev is Map
+                            ? (ev['eventDate'] ?? ev['date'] ?? '').toString()
+                            : '';
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5))),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+                                child: const Center(child: Icon(Icons.event_rounded, color: AppColors.primary)),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                                    if (date.isNotEmpty) Text(date, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.check_circle_rounded, color: AppColors.secondary, size: 20),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
             ),
             const SizedBox(height: 16),
           ],

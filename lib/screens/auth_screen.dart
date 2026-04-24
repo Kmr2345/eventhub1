@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:eventhub/data/app_state.dart';
 import 'package:eventhub/localization/error_texts.dart';
 import 'package:eventhub/localization/messages.dart';
+import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/widgets/app_snack.dart';
@@ -284,6 +285,12 @@ class _AuthScreenState extends State<AuthScreen> {
                               );
                               // Load registrations so event list cards show registered badge.
                               await state.refreshMyRegistrations();
+                              final events = await ApiService.getEvents(token);
+                              final parsed = events
+                                  .whereType<Map<String, dynamic>>()
+                                  .map(EventModel.fromJson)
+                                  .toList();
+                              state.setEvents(parsed);
                               final favs = await ApiService.getFavorites(token);
                               state.setFavorites(favs);
                             } else {

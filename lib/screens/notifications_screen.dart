@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../data/app_state.dart';
-import '../data/mock_data.dart';
 import '../theme/app_theme.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -27,45 +26,15 @@ class NotificationsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView.separated(
-        itemCount: mockNotifications.length,
-        separatorBuilder: (_, __) => const Divider(height: 0.5, color: AppColors.border, indent: 72),
-        itemBuilder: (_, i) {
-          final n = mockNotifications[i];
-          final isRead = n['read'] == 'true';
-          return Container(
-            color: isRead ? AppColors.card : AppColors.primary.withOpacity(0.03),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
-                  child: Center(child: Text(n['emoji']!, style: const TextStyle(fontSize: 22))),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(child: Text(n['title']!, style: GoogleFonts.inter(fontSize: 13, fontWeight: isRead ? FontWeight.w500 : FontWeight.w700, color: AppColors.text))),
-                          if (!isRead) Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(n['body']!, style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, height: 1.4)),
-                      const SizedBox(height: 5),
-                      Text(n['time']!, style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted.withOpacity(0.7), fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+      body: Center(
+        child: Text(
+          lang == 'ru'
+              ? 'Пока нет уведомлений'
+              : lang == 'kz'
+                  ? 'Әзірге хабарлама жоқ'
+                  : 'No notifications yet',
+          style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted),
+        ),
       ),
     );
   }

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:eventhub/models/event_model.dart';
-import 'package:eventhub/data/mock_data.dart';
 import 'package:eventhub/services/api_service.dart';
 
 class AppState extends ChangeNotifier {
   UserModel? user;
   String? token;
   String language = 'ru';
-  List<EventModel> events = getMockEvents();
+  List<EventModel> events = [];
   final Map<String, List<String>> registrations = {};
   List<dynamic> myRegistrations = [];
   List<dynamic> favorites = [];
@@ -31,6 +30,10 @@ class AppState extends ChangeNotifier {
 
   void logout() {
     user = null;
+    token = null;
+    myRegistrations = [];
+    favorites = [];
+    events = [];
     notifyListeners();
   }
 
@@ -189,5 +192,10 @@ class AppState extends ChangeNotifier {
 
   // keep old name for screens that show favorites list
   List<EventModel> get favoritesEvents => favoriteEvents;
-  List<EventModel> get myEvents  => events.where((e) => e.organizerId == 'org1').toList();
+  List<EventModel> get myEvents  {
+    final u = user;
+    if (u == null) return const [];
+    // Backend may store organizer by id or name; best-effort filter.
+    return events.where((e) => e.organizerName == u.name || e.organizerId == u.email).toList();
+  }
 }
