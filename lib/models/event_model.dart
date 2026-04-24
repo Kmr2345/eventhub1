@@ -6,8 +6,7 @@ class EventModel {
   final String description;
   final String descriptionRu;
   final String descriptionKz;
-  final String date;
-  final String time;
+  final DateTime eventDate;
   final String location;
   final String locationRu;
   final String locationKz;
@@ -29,8 +28,7 @@ class EventModel {
     required this.description,
     required this.descriptionRu,
     required this.descriptionKz,
-    required this.date,
-    required this.time,
+    required this.eventDate,
     required this.location,
     required this.locationRu,
     required this.locationKz,
@@ -50,6 +48,21 @@ class EventModel {
     int _int(dynamic v, int fallback) => v is int ? v : (v is num ? v.toInt() : fallback);
     double _double(dynamic v, double fallback) => v is double ? v : (v is num ? v.toDouble() : fallback);
     bool _bool(dynamic v, bool fallback) => v is bool ? v : fallback;
+    DateTime _dt(dynamic v) {
+      if (v is DateTime) return v;
+      if (v is String && v.isNotEmpty) {
+        final parsed = DateTime.tryParse(v);
+        if (parsed != null) return parsed;
+      }
+      // Fallback for older payloads that used date/time strings
+      final d = json['date'];
+      final t = json['time'];
+      if (d is String && t is String && d.isNotEmpty && t.isNotEmpty) {
+        final legacy = DateTime.tryParse('${d}T$t:00');
+        if (legacy != null) return legacy;
+      }
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
 
     final title = _str(json['title'], '');
     final desc = _str(json['description'], '');
@@ -63,8 +76,7 @@ class EventModel {
       description: desc,
       descriptionRu: _str(json['descriptionRu'] ?? json['description_ru'], desc),
       descriptionKz: _str(json['descriptionKz'] ?? json['description_kz'], desc),
-      date: _str(json['date'], ''),
-      time: _str(json['time'], ''),
+      eventDate: _dt(json['eventDate'] ?? json['event_date']),
       location: loc,
       locationRu: _str(json['locationRu'] ?? json['location_ru'], loc),
       locationKz: _str(json['locationKz'] ?? json['location_kz'], loc),
@@ -90,7 +102,7 @@ class EventModel {
   EventModel copyWith({
     String? title, String? titleRu, String? titleKz,
     String? description, String? descriptionRu, String? descriptionKz,
-    String? date, String? time,
+    DateTime? eventDate,
     String? location, String? locationRu, String? locationKz,
     String? category, int? capacity, bool? isFavorite,
   }) => EventModel(
@@ -101,8 +113,7 @@ class EventModel {
     description: description ?? this.description,
     descriptionRu: descriptionRu ?? this.descriptionRu,
     descriptionKz: descriptionKz ?? this.descriptionKz,
-    date: date ?? this.date,
-    time: time ?? this.time,
+    eventDate: eventDate ?? this.eventDate,
     location: location ?? this.location,
     locationRu: locationRu ?? this.locationRu,
     locationKz: locationKz ?? this.locationKz,

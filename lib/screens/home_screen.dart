@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
@@ -126,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(e.getTitle(lang), style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                Text(e.date, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withOpacity(0.8))),
+                                Text(DateFormat('dd MMM yyyy, HH:mm').format(e.eventDate), style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withOpacity(0.8))),
                               ],
                             ),
                           ),

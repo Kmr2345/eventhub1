@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 
 import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/theme/app_theme.dart';
@@ -32,6 +33,7 @@ class EventCard extends StatelessWidget {
     final location = event.getLocation(language);
     final gradient = categoryGradient(event.category);
     final fillPct  = event.fillPercent.clamp(0.0, 1.0);
+    final when = DateFormat('dd MMM yyyy, HH:mm').format(event.eventDate);
 
     return GestureDetector(
       onTap: onTap,
@@ -119,7 +121,7 @@ class EventCard extends StatelessWidget {
                     children: [
                       const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Text('${event.date} · ${event.time}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                      Text(when, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                       const SizedBox(width: 12),
                       const Icon(Icons.location_on_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -73,6 +74,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final userRating = state.getUserRating(e.id);
     final isFull     = e.spotsLeft <= 0 && !isReg;
     final gradient   = categoryGradient(e.category);
+    final when = DateFormat('dd MMM yyyy, HH:mm').format(e.eventDate);
 
     final T = {
       'ru': {'register': 'Зарегистрироваться', 'unregister': 'Отменить регистрацию', 'full': 'Мест нет', 'organizer': 'Организатор', 'description': 'Описание', 'rate': 'Оценить мероприятие', 'spotsLeft': 'мест осталось', 'participants': 'участников', 'share': 'Поделиться', 'myQr': 'Мой QR-билет'},
@@ -154,7 +156,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 children: [
                   // Meta info cards
                   ...[
-                    _infoRow(Icons.calendar_today_rounded, '${e.date} · ${e.time}'),
+                    _infoRow(Icons.calendar_today_rounded, when),
                     _infoRow(Icons.location_on_rounded, e.getLocation(lang)),
                     _infoRow(Icons.people_rounded, '${e.registered}/${e.capacity} · ${e.spotsLeft} ${T['spotsLeft']}'),
                     _infoRow(Icons.star_rounded, '${e.rating.toStringAsFixed(1)} · ${e.totalRatings} оценок', starColor: AppColors.warning),
@@ -278,7 +280,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         children: [
                           Text(e.getTitle(lang), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text), textAlign: TextAlign.center),
                           const SizedBox(height: 4),
-                          Text('${e.date} · ${e.time}', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+                          Text(when, style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
                           const SizedBox(height: 16),
                           QrImageView(
                             data: _registrationId ?? '',

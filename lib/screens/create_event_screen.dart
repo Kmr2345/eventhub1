@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
@@ -21,6 +22,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   late final TextEditingController _locRu, _locKz, _locEn;
   late final TextEditingController _date, _time, _capacity;
   String _category = 'Conference';
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
 
   static const _categories = ['Conference', 'Sports', 'Workshop', 'Art', 'Music', 'Social', 'Seminar', 'Other'];
   static const _unsplash = 'https://images.unsplash.com/photo-1613687969216-40c7b718c025?w=600&q=80';
@@ -38,10 +41,39 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _locRu   = TextEditingController(text: e?.locationRu ?? '');
     _locKz   = TextEditingController(text: e?.locationKz ?? '');
     _locEn   = TextEditingController(text: e?.location ?? '');
-    _date     = TextEditingController(text: e?.date ?? '');
-    _time     = TextEditingController(text: e?.time ?? '');
+    _date     = TextEditingController(text: e != null ? DateFormat('dd MMM yyyy').format(e.eventDate) : '');
+    _time     = TextEditingController(text: e != null ? DateFormat('HH:mm').format(e.eventDate) : '');
     _capacity = TextEditingController(text: e?.capacity.toString() ?? '50');
     _category = e?.category ?? 'Conference';
+    if (e != null) {
+      _selectedDate = DateTime(e.eventDate.year, e.eventDate.month, e.eventDate.day);
+      _selectedTime = TimeOfDay(hour: e.eventDate.hour, minute: e.eventDate.minute);
+    }
+  }
+
+  Future<void> _pickDate(String lang) async {
+    final initial = _selectedDate ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    setState(() => _selectedDate = picked);
+    _date.text = DateFormat('dd MMM yyyy').format(picked);
+  }
+
+  Future<void> _pickTime(String lang) async {
+    final initial = _selectedTime ?? TimeOfDay.now();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+    );
+    if (picked == null) return;
+    setState(() => _selectedTime = picked);
+    final dt = DateTime(2000, 1, 1, picked.hour, picked.minute);
+    _time.text = DateFormat('HH:mm').format(dt);
   }
 
   Future<void> _submit(AppState state, String lang) async {
@@ -58,6 +90,23 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       return;
     }
 
+    final sd = _selectedDate;
+    final st = _selectedTime;
+    if (sd == null || st == null) {
+      showSnack(
+        context,
+        lang == 'ru'
+            ? 'Выберите дату и время'
+            : lang == 'kz'
+                ? 'Күні мен уақытын таңдаңыз'
+                : 'Select date and time',
+        isError: true,
+      );
+      return;
+    }
+
+    final eventDate = DateTime(sd.year, sd.month, sd.day, st.hour, st.minute);
+
     final data = <String, dynamic>{
       'title': _titleEn.text.trim().isEmpty ? titleRu : _titleEn.text.trim(),
       'titleRu': titleRu,
@@ -65,8 +114,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       'description': _descEn.text.trim(),
       'descriptionRu': _descRu.text.trim(),
       'descriptionKz': _descKz.text.trim(),
-      'date': _date.text.trim(),
-      'time': _time.text.trim(),
+      'eventDate': eventDate.toIso8601String(),
       'location': _locEn.text.trim(),
       'locationRu': _locRu.text.trim(),
       'locationKz': _locKz.text.trim(),
@@ -151,9 +199,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
             // Date & Time
             Row(children: [
-              Expanded(child: _field(T['date']!, _date, '25 марта 2025')),
+              Expanded(child: _field(T['date']!, _date, '25 марта 2025', readOnly: true, onTap: () => _pickDate(lang))),
               const SizedBox(width: 10),
-              Expanded(child: _field(T['time']!, _time, '14:00')),
+              Expanded(child: _field(T['time']!, _time, '14:00', readOnly: true, onTap: () => _pickTime(lang))),
             ]),
             const SizedBox(height: 14),
 
@@ -237,7 +285,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     child: Text(text, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
   );
 
-  Widget _field(String label, TextEditingController ctrl, String hint, {int maxLines = 1, TextInputType inputType = TextInputType.text}) => Padding(
+  Widget _field(
+    String label,
+    TextEditingController ctrl,
+    String hint, {
+    int maxLines = 1,
+    TextInputType inputType = TextInputType.text,
+    bool readOnly = false,
+    VoidCallback? onTap,
+  }) => Padding(
     padding: const EdgeInsets.only(bottom: 10),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,6 +303,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           controller: ctrl,
           maxLines: maxLines,
           keyboardType: inputType,
+          readOnly: readOnly,
+          onTap: onTap,
           style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
           decoration: InputDecoration(
             hintText: hint, hintStyle: GoogleFonts.inter(color: AppColors.muted),
