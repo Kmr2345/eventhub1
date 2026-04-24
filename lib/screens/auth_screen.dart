@@ -276,6 +276,12 @@ class _AuthScreenState extends State<AuthScreen> {
                                 throw Exception('Invalid response: token/user missing');
                               }
                               final user = userRaw.cast<String, dynamic>();
+                              final backendRole = user['role']?.toString();
+                              if (backendRole != _role) {
+                                if (!mounted) return;
+                                showSnack(context, getError("wrongRole", lang), isError: true);
+                                return;
+                              }
 
                               state.setToken(token);
                               state.login(

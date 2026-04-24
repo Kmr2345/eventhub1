@@ -29,6 +29,11 @@ const Map<String, Map<String, String>> errorTexts = {
     "kz": "Құпия сөз қате",
     "en": "Wrong password",
   },
+  "wrongRole": {
+    "ru": "Вы выбрали неверную роль",
+    "kz": "Сіз қате рөл таңдадыңыз",
+    "en": "Wrong role selected",
+  },
   "networkError": {
     "ru": "Нет подключения к интернету",
     "kz": "Интернет жоқ",
