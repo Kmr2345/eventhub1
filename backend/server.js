@@ -66,7 +66,7 @@ cron.schedule("0 * * * *", async () => {
             `Завтра: ${event.title}`,
             {
               type: "reminder1d",
-              eventId: event._id.toString(),
+              eventId: event._id,
               day,
             }
           );

@@ -123,12 +123,40 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setNotifications(List<dynamic> list) {
+    notifications = list;
+    notifyListeners();
+  }
+
   Future<void> markAllNotificationsRead() async {
     final t = token;
     if (t == null || t.isEmpty) return;
     await ApiService.readAllNotifications(t);
     await refreshNotifications();
   }
+
+  Future<void> markNotificationRead(String notificationId) async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    await ApiService.markNotificationRead(notificationId, t);
+    await refreshNotifications();
+  }
+
+  void markNotificationAsRead(String id) {
+    notifications = notifications.map((n) {
+      if (n is! Map) return n;
+      final nid = (n['_id'] ?? n['id'])?.toString();
+      if (nid != id) return n;
+      final next = Map<String, dynamic>.from(n.cast());
+      next['read'] = true;
+      next['isRead'] = true;
+      return next;
+    }).toList();
+    notifyListeners();
+  }
+
+  // Backwards compatibility (older call site name)
+  void markNotificationAsReadLocal(String id) => markNotificationAsRead(id);
 
   String? findRegistrationIdForEvent(String eventId) {
     for (final r in myRegistrations) {

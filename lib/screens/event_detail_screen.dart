@@ -13,8 +13,9 @@ import 'package:eventhub/i18n/labels.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/widgets/app_snack.dart';
 class EventDetailScreen extends StatefulWidget {
-  final EventModel event;
-  const EventDetailScreen({super.key, required this.event});
+  final EventModel? event;
+  final String? eventId;
+  const EventDetailScreen({super.key, this.event, this.eventId});
   @override State<EventDetailScreen> createState() => _EventDetailScreenState();
 }
 
@@ -23,19 +24,57 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   int  _hoverStar = 0;
   bool _isRegistered = false;
   String? _registrationId;
+  EventModel? _loaded;
 
-  EventModel get e => widget.event;
+  EventModel? get _event => widget.event ?? _loaded;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _loadRegistration();
+      _loadIfNeeded();
     });
   }
 
+  Future<void> _loadIfNeeded() async {
+    final provided = widget.event;
+    if (provided != null) {
+      _loaded = provided;
+      await _loadRegistrationFor(provided.id);
+      return;
+    }
+
+    final id = widget.eventId;
+    if (id == null || id.isEmpty) return;
+
+    // Try AppState cache first
+    final cached = context.read<AppState>().events.where((e) => e.id == id).toList();
+    if (cached.isNotEmpty) {
+      _loaded = cached.first;
+      await _loadRegistrationFor(id);
+      if (mounted) setState(() {});
+      return;
+    }
+
+    try {
+      final raw = await ApiService.getEventById(id);
+      final model = EventModel.fromJson(raw);
+      _loaded = model;
+      await _loadRegistrationFor(id);
+      if (mounted) setState(() {});
+    } catch (err) {
+      print('LOAD EVENT ERROR: ${err.toString()}');
+    }
+  }
+
   Future<void> _loadRegistration() async {
+    final ev = _event;
+    if (ev == null) return;
+    await _loadRegistrationFor(ev.id);
+  }
+
+  Future<void> _loadRegistrationFor(String eventId) async {
     final token = context.read<AppState>().token;
     if (token == null || token.isEmpty) return;
 
@@ -46,7 +85,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         if (r is! Map) continue;
         final ev = r['eventId'];
         final evId = ev is Map ? (ev['_id'] ?? ev['id'])?.toString() : ev?.toString();
-        if (evId == e.id) {
+        if (evId == eventId) {
           found = r.cast<String, dynamic>();
           break;
         }
@@ -70,6 +109,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Widget build(BuildContext context) {
     final state      = context.watch<AppState>();
     final lang       = state.language;
+    final e = _event;
+    if (e == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.bg,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final isReg      = _isRegistered;
     final userRating = state.getUserRating(e.id);
     final isFull     = e.spotsLeft <= 0 && !isReg;
@@ -180,7 +227,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(T['organizer']!, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w500)),
-                            Text(e.organizerName, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
+                            Text(
+                              (e.organizerName.isNotEmpty ? e.organizerName : T['organizer']!),
+                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text),
+                            ),
                           ],
                         ),
                       ],

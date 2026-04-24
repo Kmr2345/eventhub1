@@ -70,6 +70,25 @@ class ApiService {
     return {'message': decoded.toString()};
   }
 
+  static Future<Map<String, dynamic>> markNotificationRead(String notificationId, String token) async {
+    final url = '$baseUrl/notifications/read/$notificationId';
+    _logRequest(method: 'PUT', url: url, token: token);
+
+    final res = await http.put(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    return {'message': decoded.toString()};
+  }
+
   // FAVORITES
   static Future<List> getFavorites(String token) async {
     final url = '$baseUrl/favorites';
@@ -154,6 +173,21 @@ class ApiService {
       body: body,
     );
 
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> getEventById(String eventId) async {
+    final url = '$baseUrl/events/$eventId';
+    _logRequest(method: 'GET', url: url);
+
+    final res = await http.get(Uri.parse(url));
     print('RESPONSE: ${res.body}');
     final decoded = _decodeAny(res);
     if (res.statusCode != 200) {

@@ -67,6 +67,9 @@ class EventModel {
     final title = _str(json['title'], '');
     final desc = _str(json['description'], '');
     final loc = _str(json['location'], '');
+    final org = json['organizerId'];
+    final orgId = org is Map ? (org['_id'] ?? org['id'])?.toString() : (json['organizerId'] ?? json['organizer_id'])?.toString();
+    final orgName = org is Map ? (org['name'] ?? '').toString() : (json['organizerName'] ?? json['organizer_name'] ?? '').toString();
 
     return EventModel(
       id: _str(json['id'] ?? json['_id'], ''),
@@ -84,8 +87,8 @@ class EventModel {
       image: _str(json['image'], ''),
       capacity: _int(json['capacity'], 0),
       registered: _int(json['registered'], 0),
-      organizerId: _str(json['organizerId'] ?? json['organizer_id'], ''),
-      organizerName: _str(json['organizerName'] ?? json['organizer_name'], ''),
+      organizerId: _str(orgId, ''),
+      organizerName: _str(orgName, ''),
       rating: _double(json['rating'], 0),
       totalRatings: _int(json['totalRatings'] ?? json['total_ratings'], 0),
       isFavorite: _bool(json['isFavorite'] ?? json['is_favorite'], false),
