@@ -31,6 +31,45 @@ class ApiService {
     return Exception(msg);
   }
 
+  // NOTIFICATIONS
+  static Future<List> getNotifications(String token) async {
+    final url = '$baseUrl/notifications';
+    _logRequest(method: 'GET', url: url, token: token);
+
+    final res = await http.get(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is List) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> readAllNotifications(String token) async {
+    final url = '$baseUrl/notifications/readAll';
+    _logRequest(method: 'POST', url: url, token: token);
+
+    final res = await http.post(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    return {'message': decoded.toString()};
+  }
+
   // FAVORITES
   static Future<List> getFavorites(String token) async {
     final url = '$baseUrl/favorites';

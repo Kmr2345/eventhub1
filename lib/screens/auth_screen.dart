@@ -299,6 +299,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               state.setEvents(parsed);
                               final favs = await ApiService.getFavorites(token);
                               state.setFavorites(favs);
+                              await state.refreshNotifications();
                             } else {
                               final name = _nameCtrl.text.trim();
                               if (name.isEmpty) {

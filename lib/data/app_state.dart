@@ -10,6 +10,7 @@ class AppState extends ChangeNotifier {
   final Map<String, List<String>> registrations = {};
   List<dynamic> myRegistrations = [];
   List<dynamic> favorites = [];
+  List<dynamic> notifications = [];
   final Map<String, int> userRatings = {};
 
   // Auth
@@ -33,6 +34,7 @@ class AppState extends ChangeNotifier {
     token = null;
     myRegistrations = [];
     favorites = [];
+    notifications = [];
     events = [];
     notifyListeners();
   }
@@ -111,6 +113,21 @@ class AppState extends ChangeNotifier {
     final data = await ApiService.getMyRegistrations(t);
     myRegistrations = data;
     notifyListeners();
+  }
+
+  Future<void> refreshNotifications() async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    final data = await ApiService.getNotifications(t);
+    notifications = data;
+    notifyListeners();
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    await ApiService.readAllNotifications(t);
+    await refreshNotifications();
   }
 
   String? findRegistrationIdForEvent(String eventId) {
