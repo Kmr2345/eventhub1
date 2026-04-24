@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
+import 'package:eventhub/localization/error_texts.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/services/api_service.dart';
 
@@ -16,7 +17,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailCtrl    = TextEditingController();
   final _passwordCtrl = TextEditingController();
   String _role = 'student';
-  String? _debugError;
   bool isRegister = false;
 
   final _labels = {
@@ -224,15 +224,22 @@ class _AuthScreenState extends State<AuthScreen> {
                       // Primary action button
                       GestureDetector(
                         onTap: () async {
-                          setState(() => _debugError = null);
-
+                          final lang = context.read<AppState>().language;
                           final email = _emailCtrl.text.trim();
                           final password = _passwordCtrl.text.trim();
-                          if (email.isEmpty || password.isEmpty) {
+                          if (email.isEmpty) {
                             if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(t['emptyCreds']!)),
-                            );
+                            showSnack(getError("emptyEmail", lang));
+                            return;
+                          }
+                          if (password.isEmpty) {
+                            if (!mounted) return;
+                            showSnack(getError("emptyPassword", lang));
+                            return;
+                          }
+                          if (!email.contains("@")) {
+                            if (!mounted) return;
+                            showSnack(getError("invalidEmail", lang));
                             return;
                           }
 
@@ -277,13 +284,20 @@ class _AuthScreenState extends State<AuthScreen> {
                             }
 
                           } catch (e) {
-                            print("ERROR: ${e.toString()}");
+                            print("LOGIN ERROR: ${e.toString()}");
                             if (!mounted) return;
-                            final msg = e.toString();
-                            setState(() => _debugError = msg);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(msg)),
-                            );
+                            final raw = e.toString();
+                            String message = getError("serverError", lang);
+
+                            if (raw.contains("User not found")) {
+                              message = getError("userNotFound", lang);
+                            } else if (raw.contains("Invalid credentials")) {
+                              message = getError("wrongPassword", lang);
+                            } else if (raw.contains("SocketException")) {
+                              message = getError("networkError", lang);
+                            }
+
+                            showSnack(message);
                           }
                         },
                         child: Container(
@@ -319,14 +333,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                       ),
-                      if (_debugError != null) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          _debugError!,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(fontSize: 11, color: AppColors.danger, fontWeight: FontWeight.w600),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -372,4 +378,13 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
     ],
   );
+
+  void showSnack(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 }

@@ -168,7 +168,10 @@ class ApiService {
   // LOGIN
   static Future<Map<String, dynamic>> login(String email, String password) async {
     final url = '$baseUrl/auth/login';
-    final body = jsonEncode({'email': email, 'password': password});
+    final body = jsonEncode({
+      'email': email,
+      'password': password,
+    });
     _logRequest(method: 'POST', url: url, body: body);
 
     final res = await http.post(
@@ -178,8 +181,24 @@ class ApiService {
     );
 
     print('RESPONSE: ${res.body}');
-    final decoded = _decodeMap(res);
-    if (res.statusCode != 200) throw _httpError(res, decoded: decoded);
+    final data = _decodeAny(res);
+
+    if (res.statusCode != 200) {
+      if (data is Map) {
+        final msg = data['message']?.toString() ?? data.toString();
+        throw Exception(msg);
+      }
+      if (data is String) {
+        throw Exception(data);
+      }
+      throw Exception(data.toString());
+    }
+
+    if (data is! Map) {
+      throw Exception('Unexpected login response: ${data.runtimeType}');
+    }
+
+    final decoded = data.cast<String, dynamic>();
     if (decoded['token'] == null || decoded['user'] == null) {
       throw Exception('Unexpected login response: missing token/user');
     }
