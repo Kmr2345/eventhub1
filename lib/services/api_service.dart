@@ -15,14 +15,6 @@ class ApiService {
     if (token != null) print('TOKEN: $token');
   }
 
-  static Map<String, dynamic> _decodeMap(http.Response res) {
-    try {
-      return (jsonDecode(res.body) as Map).cast<String, dynamic>();
-    } catch (_) {
-      throw Exception('Invalid JSON response (${res.statusCode}): ${res.body}');
-    }
-  }
-
   static dynamic _decodeAny(http.Response res) {
     try {
       return jsonDecode(res.body);
@@ -227,9 +219,22 @@ class ApiService {
     );
 
     print('RESPONSE: ${res.body}');
-    final decoded = _decodeMap(res);
-    if (res.statusCode != 200) throw _httpError(res, decoded: decoded);
-    return decoded;
+    final data = _decodeAny(res);
+
+    if (res.statusCode != 200) {
+      if (data is Map) {
+        final msg = data['message']?.toString() ?? data.toString();
+        throw Exception(msg);
+      }
+      if (data is String) throw Exception(data);
+      throw Exception(data.toString());
+    }
+
+    if (data is! Map) {
+      throw Exception('Unexpected register response: ${data.runtimeType}');
+    }
+
+    return data.cast<String, dynamic>();
   }
 
   // LOGIN

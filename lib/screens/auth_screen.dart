@@ -322,6 +322,8 @@ class _AuthScreenState extends State<AuthScreen> {
 
                             if (raw.contains("User not found")) {
                               message = getError("userNotFound", lang);
+                            } else if (raw.contains("User already exists")) {
+                              message = getError("userExists", lang);
                             } else if (raw.contains("Invalid credentials")) {
                               message = getError("wrongPassword", lang);
                             } else if (raw.contains("SocketException")) {

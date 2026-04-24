@@ -24,6 +24,11 @@ const Map<String, Map<String, String>> errorTexts = {
     "kz": "Пайдаланушы табылмады",
     "en": "User not found",
   },
+  "userExists": {
+    "ru": "Пользователь уже существует",
+    "kz": "Пайдаланушы бұрыннан бар",
+    "en": "User already exists",
+  },
   "wrongPassword": {
     "ru": "Неверный пароль",
     "kz": "Құпия сөз қате",
