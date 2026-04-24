@@ -165,6 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   state.syncToggleFavorite(e.id);
                   showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
                 },
+                showFavoriteButton: state.user?.role != 'organizer',
               );
             },
             childCount: upcoming.length,

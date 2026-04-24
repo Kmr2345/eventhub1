@@ -13,6 +13,7 @@ class EventCard extends StatelessWidget {
   final bool isRegistered;
   final VoidCallback onTap;
   final VoidCallback onFavorite;
+  final bool showFavoriteButton;
 
   const EventCard({
     super.key,
@@ -22,6 +23,7 @@ class EventCard extends StatelessWidget {
     required this.isRegistered,
     required this.onTap,
     required this.onFavorite,
+    this.showFavoriteButton = true,
   });
 
   @override
@@ -85,20 +87,21 @@ class EventCard extends StatelessWidget {
                         ),
                       ),
                     // Favorite button
-                    Positioned(
-                      top: 10, right: 12,
-                      child: GestureDetector(
-                        onTap: onFavorite,
-                        child: Container(
-                          width: 32, height: 32,
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
-                          child: Center(
-                            child: Icon(isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                size: 17, color: isFavorite ? AppColors.pink : AppColors.muted),
+                    if (showFavoriteButton)
+                      Positioned(
+                        top: 10, right: 12,
+                        child: GestureDetector(
+                          onTap: onFavorite,
+                          child: Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
+                            child: Center(
+                              child: Icon(isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                  size: 17, color: isFavorite ? AppColors.pink : AppColors.muted),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

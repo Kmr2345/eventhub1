@@ -48,6 +48,7 @@ class FavoritesScreen extends StatelessWidget {
                   state.syncToggleFavorite(e.id);
                   showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
                 },
+                showFavoriteButton: state.user?.role != 'organizer',
               );
             },
           );

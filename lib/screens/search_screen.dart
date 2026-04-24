@@ -184,6 +184,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         state.syncToggleFavorite(e.id);
                         showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
                       },
+                      showFavoriteButton: state.user?.role != 'organizer',
                     );
                   },
                   childCount: results.length,

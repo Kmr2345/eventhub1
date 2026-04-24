@@ -100,24 +100,25 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               ),
             ),
             actions: [
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: GestureDetector(
-                  onTap: () {
-                    final wasFav = state.isFavoriteEvent(e.id);
-                    state.syncToggleFavorite(e.id);
-                    showSnack(
-                      context,
-                      getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang),
-                    );
-                  },
-                  child: Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                    child: Center(child: Icon(state.isFavoriteEvent(e.id) ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: Colors.white, size: 18)),
+              if (state.user?.role != 'organizer')
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: GestureDetector(
+                    onTap: () {
+                      final wasFav = state.isFavoriteEvent(e.id);
+                      state.syncToggleFavorite(e.id);
+                      showSnack(
+                        context,
+                        getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang),
+                      );
+                    },
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                      child: Center(child: Icon(state.isFavoriteEvent(e.id) ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: Colors.white, size: 18)),
+                    ),
                   ),
                 ),
-              ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
