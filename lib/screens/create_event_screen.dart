@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
 import 'package:eventhub/models/event_model.dart';
+import 'package:eventhub/localization/messages.dart';
 import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/theme/app_theme.dart';
+import 'package:eventhub/widgets/app_snack.dart';
 
 class CreateEventScreen extends StatefulWidget {
   final EventModel? editEvent;
@@ -46,21 +48,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     final token = state.token;
     if (token == null || token.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login first')),
-      );
+      showSnack(context, getMessage("loginFirst", lang), isError: true);
       return;
     }
 
     final titleRu = _titleRu.text.trim();
     if (titleRu.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            lang == 'ru' ? 'Введите название' : lang == 'kz' ? 'Атауын енгізіңіз' : 'Enter title',
-          ),
-        ),
-      );
+      showSnack(context, getMessage("enterTitle", lang), isError: true);
       return;
     }
 
@@ -87,16 +81,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       state.addEvent(model);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(lang == 'ru' ? 'Событие создано' : lang == 'kz' ? 'Іс-шара жасалды' : 'Event created')),
-      );
+      showSnack(context, getMessage("eventCreated", lang));
       Navigator.pop(context);
     } catch (e) {
       print('ERROR: ${e.toString()}');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      showSnack(context, e.toString(), isError: true);
     }
   }
 

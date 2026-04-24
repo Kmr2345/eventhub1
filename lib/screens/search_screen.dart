@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../data/app_state.dart';
+import 'package:eventhub/localization/messages.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/event_card.dart';
+import 'package:eventhub/widgets/app_snack.dart';
 import 'event_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -72,17 +74,13 @@ class _SearchScreenState extends State<SearchScreen> {
                     final result = await ApiService.markAttended(code, token);
                     print('ATTENDED: $result');
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('User marked as attended')),
-                    );
+                    showSnack(context, getMessage("attendanceMarked", lang));
                     _ctrl.clear();
                     setState(() => _query = '');
                   } catch (e) {
                     print('ERROR: $e');
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error marking attendance')),
-                    );
+                    showSnack(context, getMessage("attendanceError", lang), isError: true);
                   } finally {
                     _scanInFlight = false;
                   }
@@ -178,10 +176,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     final e = results[i];
                     return EventCard(
                       event: e, language: lang,
-                      isFavorite: e.isFavorite,
+                      isFavorite: state.isFavoriteEvent(e.id),
                       isRegistered: state.isRegistered(e.id),
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
-                      onFavorite: () => state.toggleFavorite(e.id),
+                      onFavorite: () {
+                        final wasFav = state.isFavoriteEvent(e.id);
+                        state.syncToggleFavorite(e.id);
+                        showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
+                      },
                     );
                   },
                   childCount: results.length,

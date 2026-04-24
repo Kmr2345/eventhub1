@@ -5,10 +5,12 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:eventhub/data/app_state.dart';
+import 'package:eventhub/localization/messages.dart';
 import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/i18n/labels.dart';
 import 'package:eventhub/theme/app_theme.dart';
+import 'package:eventhub/widgets/app_snack.dart';
 class EventDetailScreen extends StatefulWidget {
   final EventModel event;
   const EventDetailScreen({super.key, required this.event});
@@ -101,11 +103,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: GestureDetector(
-                  onTap: () => state.toggleFavorite(e.id),
+                  onTap: () {
+                    final wasFav = state.isFavoriteEvent(e.id);
+                    state.syncToggleFavorite(e.id);
+                    showSnack(
+                      context,
+                      getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang),
+                    );
+                  },
                   child: Container(
                     width: 36, height: 36,
                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                    child: Center(child: Icon(e.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: Colors.white, size: 18)),
+                    child: Center(child: Icon(state.isFavoriteEvent(e.id) ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: Colors.white, size: 18)),
                   ),
                 ),
               ),
@@ -306,9 +315,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                                   if (token == null || token.isEmpty) {
                                     if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please login first')),
-                                    );
+                                    showSnack(context, getMessage("loginFirst", lang), isError: true);
                                     return;
                                   }
 
@@ -324,9 +331,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       await context.read<AppState>().refreshMyRegistrations();
 
                                       if (!mounted) return;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Registered successfully')),
-                                      );
+                                      showSnack(context, getMessage("eventRegistered", lang));
 
                                       setState(() {});
                                     } else {
@@ -337,9 +342,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                                       if (registrationId == null || registrationId.isEmpty) {
                                         if (!mounted) return;
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Registration not found for this event')),
-                                        );
+                                        showSnack(context, getMessage("registrationNotFound", lang), isError: true);
                                         return;
                                       }
 
@@ -352,18 +355,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       await context.read<AppState>().refreshMyRegistrations();
 
                                       if (!mounted) return;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Cancelled')),
-                                      );
+                                      showSnack(context, getMessage("eventCancelled", lang));
 
                                       setState(() {});
                                     }
                                   } catch (err) {
                                     print('error: ${err.toString()}');
                                     if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(err.toString())),
-                                    );
+                                    showSnack(context, err.toString(), isError: true);
                                   }
                                 },
                           child: Container(

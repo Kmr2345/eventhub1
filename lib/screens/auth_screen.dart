@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
 import 'package:eventhub/localization/error_texts.dart';
+import 'package:eventhub/localization/messages.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/services/api_service.dart';
+import 'package:eventhub/widgets/app_snack.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -34,7 +36,6 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Войти',
       'register': 'Зарегистрироваться',
       'createAccount': 'Создать аккаунт',
-      'emptyCreds': 'Введите email и пароль',
       'signupPrompt': 'Нет аккаунта? ',
       'signupCta': 'Зарегистрируйтесь',
       'signinPrompt': 'Уже есть аккаунт? ',
@@ -53,7 +54,6 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Кіру',
       'register': 'Тіркелу',
       'createAccount': 'Аккаунт ашу',
-      'emptyCreds': 'Email мен құпия сөзді енгізіңіз',
       'signupPrompt': 'Аккаунтыңыз жоқ па? ',
       'signupCta': 'Тіркеліңіз',
       'signinPrompt': 'Аккаунтыңыз бар ма? ',
@@ -72,7 +72,6 @@ class _AuthScreenState extends State<AuthScreen> {
       'login': 'Log In',
       'register': 'Sign up',
       'createAccount': 'Create account',
-      'emptyCreds': 'Enter email and password',
       'signupPrompt': 'Don\'t have an account? ',
       'signupCta': 'Sign up',
       'signinPrompt': 'Already have an account? ',
@@ -240,25 +239,25 @@ class _AuthScreenState extends State<AuthScreen> {
                           if (email.isEmpty) {
                             if (!mounted) return;
                             setState(() => _emailInvalid = true);
-                            showSnack(getError("emptyEmail", lang));
+                            showSnack(context, getError("emptyEmail", lang), isError: true);
                             return;
                           }
                           if (password.isEmpty) {
                             if (!mounted) return;
                             setState(() => _passwordInvalid = true);
-                            showSnack(getError("emptyPassword", lang));
+                            showSnack(context, getError("emptyPassword", lang), isError: true);
                             return;
                           }
                           if (!isValidEmail(email)) {
                             if (!mounted) return;
                             setState(() => _emailInvalid = true);
-                            showSnack(getError("invalidEmail", lang));
+                            showSnack(context, getError("invalidEmail", lang), isError: true);
                             return;
                           }
                           if (isRegister && !isValidPassword(password)) {
                             if (!mounted) return;
                             setState(() => _passwordInvalid = true);
-                            showSnack(getError("weakPassword", lang));
+                            showSnack(context, getError("weakPassword", lang), isError: true);
                             return;
                           }
 
@@ -285,6 +284,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               );
                               // Load registrations so event list cards show registered badge.
                               await state.refreshMyRegistrations();
+                              final favs = await ApiService.getFavorites(token);
+                              state.setFavorites(favs);
                             } else {
                               final name = _nameCtrl.text.trim();
                               if (name.isEmpty) {
@@ -295,9 +296,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               print("RESPONSE: $result");
 
                               if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(t['registerSuccess']!)),
-                              );
+                              showSnack(context, getMessage("registerSuccess", lang));
                               setState(() => isRegister = false);
                               await state.refreshMyRegistrations();
                             }
@@ -316,7 +315,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               message = getError("networkError", lang);
                             }
 
-                            showSnack(message);
+                            showSnack(context, message, isError: true);
                           }
                         },
                         child: Container(
@@ -417,14 +416,5 @@ class _AuthScreenState extends State<AuthScreen> {
 
   bool isValidPassword(String password) {
     return password.length >= 6;
-  }
-
-  void showSnack(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
 }

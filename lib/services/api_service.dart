@@ -39,6 +39,73 @@ class ApiService {
     return Exception(msg);
   }
 
+  // FAVORITES
+  static Future<List> getFavorites(String token) async {
+    final url = '$baseUrl/favorites';
+    _logRequest(method: 'GET', url: url, token: token);
+
+    final res = await http.get(
+      Uri.parse(url),
+      headers: {'Authorization': token},
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is List) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> addFavorite(String eventId, String token) async {
+    final url = '$baseUrl/favorites';
+    final body = jsonEncode({'eventId': eventId});
+    _logRequest(method: 'POST', url: url, token: token, body: body);
+
+    final res = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+      body: body,
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<Map<String, dynamic>> removeFavorite(String eventId, String token) async {
+    final url = '$baseUrl/favorites/$eventId';
+    _logRequest(method: 'DELETE', url: url, token: token);
+
+    final res = await http.delete(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+    );
+
+    print('RESPONSE: ${res.body}');
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    // backend might reply with plain string
+    return {'message': decoded.toString()};
+  }
+
   static Future<Map<String, dynamic>> createEvent(
     Map<String, dynamic> data,
     String token,
