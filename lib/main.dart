@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
@@ -24,9 +25,14 @@ class EventHubApp extends StatelessWidget {
       title: 'EventHub',
       theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       supportedLocales: const [
         Locale('ru'),
-        Locale('kk'),
+        Locale('kz'),
         Locale('en'),
       ],
       home: Consumer<AppState>(

@@ -6,11 +6,13 @@ const Registration = require("./models/Registration");
 const createNotification = require("./utils/createNotification");
 
 const app = express(); //
+const cors = require("cors");
+app.use(cors());
 
 app.use(express.json());
 
 // MongoDB
-mongoose.connect("mongodb://127.0.0.1:27017/eventhub")
+mongoose.connect("mongodb://kunshuak06_db_user:57In2m69XsT4NExt@ac-8pbn1os-shard-00-00.x2otkv6.mongodb.net:27017,ac-8pbn1os-shard-00-01.x2otkv6.mongodb.net:27017,ac-8pbn1os-shard-00-02.x2otkv6.mongodb.net:27017/eventhub?ssl=true&replicaSet=atlas-115kpv-shard-0&authSource=admin&appName=Eventhub")
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 
