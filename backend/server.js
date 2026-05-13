@@ -1,14 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cron = require("node-cron");
+const cors = require("cors");
 const Event = require("./models/Event");
 const Registration = require("./models/Registration");
 const createNotification = require("./utils/createNotification");
 
-const app = express(); //
-const cors = require("cors");
+const app = express();
 app.use(cors());
-
 app.use(express.json());
 
 // MongoDB
@@ -20,23 +19,20 @@ mongoose.connect("mongodb://kunshuak06_db_user:57In2m69XsT4NExt@ac-8pbn1os-shard
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
-//events
 const eventRoutes = require("./routes/events");
-
 app.use("/events", eventRoutes);
 
-//event registration
 const registrationRoutes = require("./routes/registrations");
-
 app.use("/registrations", registrationRoutes);
 
-//favorites
 const favoriteRoutes = require("./routes/favorites");
 app.use("/favorites", favoriteRoutes);
 
-//notifications
 const notificationRoutes = require("./routes/notifications");
 app.use("/notifications", notificationRoutes);
+
+const adminRoutes = require("./routes/admin");
+app.use("/admin", adminRoutes);
 
 // Reminder cron (1 day before)
 cron.schedule("0 * * * *", async () => {
@@ -46,15 +42,12 @@ cron.schedule("0 * * * *", async () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const day = createNotification.dayKey(tomorrow);
 
-    const events = await Event.find({ eventDate: { $ne: null } }).select(
-      "_id title eventDate"
-    );
+    const events = await Event.find({ eventDate: { $ne: null } }).select("_id title eventDate");
 
     for (const event of events) {
       const eventDate = new Date(event.eventDate);
       const diff = Math.abs(eventDate - tomorrow);
 
-      // within 24h window relative to "tomorrow"
       if (diff < 1000 * 60 * 60 * 24) {
         const regs = await Registration.find({
           eventId: event._id,
@@ -66,11 +59,7 @@ cron.schedule("0 * * * *", async () => {
             r.userId,
             "Напоминание",
             `Завтра: ${event.title}`,
-            {
-              type: "reminder1d",
-              eventId: event._id,
-              day,
-            }
+            { type: "reminder1d", eventId: event._id, day }
           );
         }
       }
@@ -80,12 +69,10 @@ cron.schedule("0 * * * *", async () => {
   }
 });
 
-// Test route
 app.get("/", (req, res) => {
   res.send("API running");
 });
 
-// Server
 app.listen(5000, () => {
   console.log("Server started on port 5000");
 });

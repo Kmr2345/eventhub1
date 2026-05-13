@@ -192,13 +192,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             final active = _role == r;
                             return Expanded(
                               child: GestureDetector(
-                                onTap: () => setState(() {
-                                  _role = r;
-                                  // Organizer is login-only (no self-signup).
-                                  if (_role == 'organizer') {
-                                    isRegister = false;
-                                  }
-                                }),
+                                onTap: () => setState(() => _role = r),
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
                                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -220,7 +214,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      if (isRegister && _role == 'student') ...[
+                      if (isRegister) ...[
                         _buildField(t['name']!, _nameCtrl, t['nameHint']!, false),
                         const SizedBox(height: 14),
                       ],
@@ -355,25 +349,24 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (_role == 'student')
-                        Center(
-                          child: GestureDetector(
-                            onTap: () => setState(() => isRegister = !isRegister),
-                            child: RichText(
-                              textAlign: TextAlign.center,
-                              text: TextSpan(
-                                style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w500),
-                                children: [
-                                  TextSpan(text: isRegister ? t['signinPrompt']! : t['signupPrompt']!),
-                                  TextSpan(
-                                    text: isRegister ? t['signinCta']! : t['signupCta']!,
-                                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w700),
-                                  ),
-                                ],
-                              ),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => setState(() => isRegister = !isRegister),
+                          child: RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w500),
+                              children: [
+                                TextSpan(text: isRegister ? t['signinPrompt']! : t['signupPrompt']!),
+                                TextSpan(
+                                  text: isRegister ? t['signinCta']! : t['signupCta']!,
+                                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w700),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),

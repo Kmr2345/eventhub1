@@ -389,4 +389,75 @@ class ApiService {
     }
     return decoded;
   }
+  // ── ADMIN ──────────────────────────────────────────────────────────────
+
+  static Future<List> adminGetUsers(String token) async {
+    final url = '$baseUrl/admin/users';
+    _logRequest(method: 'GET', url: url, token: token);
+    final res = await http.get(Uri.parse(url), headers: {'Authorization': token});
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is List) return decoded;
+    throw Exception('Unexpected response format');
+  }
+
+  static Future<Map<String, dynamic>> adminChangeRole(
+      String userId,
+      String role,
+      String token,
+      ) async {
+    final url = '$baseUrl/admin/users/$userId/role';
+    final body = jsonEncode({'role': role});
+    _logRequest(method: 'PATCH', url: url, token: token, body: body);
+    final res = await http.patch(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json', 'Authorization': token},
+      body: body,
+    );
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    throw Exception('Unexpected response format');
+  }
+
+  static Future<void> adminDeleteUser(String userId, String token) async {
+    final url = '$baseUrl/admin/users/$userId';
+    _logRequest(method: 'DELETE', url: url, token: token);
+    final res = await http.delete(Uri.parse(url), headers: {'Authorization': token});
+    if (res.statusCode != 200) {
+      final decoded = _decodeAny(res);
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+  }
+
+  static Future<void> adminDeleteEvent(String eventId, String token) async {
+    final url = '$baseUrl/admin/events/$eventId';
+    _logRequest(method: 'DELETE', url: url, token: token);
+    final res = await http.delete(Uri.parse(url), headers: {'Authorization': token});
+    if (res.statusCode != 200) {
+      final decoded = _decodeAny(res);
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+  }
+
+  static Future<Map<String, dynamic>> adminGetStats(String token) async {
+    final url = '$baseUrl/admin/stats';
+    _logRequest(method: 'GET', url: url, token: token);
+    final res = await http.get(Uri.parse(url), headers: {'Authorization': token});
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) {
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+    if (decoded is Map<String, dynamic>) return decoded;
+    throw Exception('Unexpected response format');
+  }
 }

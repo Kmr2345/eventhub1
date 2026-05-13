@@ -12,6 +12,8 @@ import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/i18n/labels.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/widgets/app_snack.dart';
+import 'package:eventhub/screens/create_event_screen.dart';
+
 class EventDetailScreen extends StatefulWidget {
   final EventModel? event;
   final String? eventId;
@@ -48,7 +50,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final id = widget.eventId;
     if (id == null || id.isEmpty) return;
 
-    // Try AppState cache first
     final cached = context.read<AppState>().events.where((e) => e.id == id).toList();
     if (cached.isNotEmpty) {
       _loaded = cached.first;
@@ -100,7 +101,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         _isRegistered = found != null && status != 'cancelled';
       });
     } catch (err) {
-      // keep silent; screen can still work with manual actions
       print('LOAD REG ERROR: ${err.toString()}');
     }
   }
@@ -109,7 +109,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Widget build(BuildContext context) {
     final state      = context.watch<AppState>();
     final lang       = state.language;
+    final role       = state.user?.role ?? 'student';
+    final isStudent  = role == 'student';
+    final isOrganizer = role == 'organizer';
+    final isAdmin    = role == 'admin';
     final e = _event;
+
     if (e == null) {
       return const Scaffold(
         backgroundColor: AppColors.bg,
@@ -123,17 +128,56 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final gradient   = categoryGradient(e.category);
     final when = DateFormat('dd MMM yyyy, HH:mm').format(e.eventDate);
 
+    // Real participant count
+    final participantCount = e.registered;
+
     final T = {
-      'ru': {'register': 'Зарегистрироваться', 'unregister': 'Отменить регистрацию', 'full': 'Мест нет', 'organizer': 'Организатор', 'description': 'Описание', 'rate': 'Оценить мероприятие', 'spotsLeft': 'мест осталось', 'participants': 'участников', 'share': 'Поделиться', 'myQr': 'Мой QR-билет'},
-      'kz': {'register': 'Тіркелу', 'unregister': 'Тіркелуді болдырмау', 'full': 'Орын жоқ', 'organizer': 'Ұйымдастырушы', 'description': 'Сипаттама', 'rate': 'Бағалау', 'spotsLeft': 'орын қалды', 'participants': 'қатысушылар', 'share': 'Бөлісу', 'myQr': 'Менің QR-билетім'},
-      'en': {'register': 'Register', 'unregister': 'Cancel Registration', 'full': 'Event is Full', 'organizer': 'Organizer', 'description': 'Description', 'rate': 'Rate This Event', 'spotsLeft': 'spots left', 'participants': 'participants', 'share': 'Share', 'myQr': 'My QR Ticket'},
+      'ru': {
+        'register': 'Зарегистрироваться',
+        'unregister': 'Отменить регистрацию',
+        'full': 'Мест нет',
+        'organizer': 'Организатор',
+        'description': 'Описание',
+        'rate': 'Оценить мероприятие',
+        'spotsLeft': 'мест осталось',
+        'participants': 'участников',
+        'share': 'Поделиться',
+        'myQr': 'Мой QR-билет',
+        'edit': 'Редактировать',
+      },
+      'kz': {
+        'register': 'Тіркелу',
+        'unregister': 'Тіркелуді болдырмау',
+        'full': 'Орын жоқ',
+        'organizer': 'Ұйымдастырушы',
+        'description': 'Сипаттама',
+        'rate': 'Бағалау',
+        'spotsLeft': 'орын қалды',
+        'participants': 'қатысушылар',
+        'share': 'Бөлісу',
+        'myQr': 'Менің QR-билетім',
+        'edit': 'Өңдеу',
+      },
+      'en': {
+        'register': 'Register',
+        'unregister': 'Cancel Registration',
+        'full': 'Event is Full',
+        'organizer': 'Organizer',
+        'description': 'Description',
+        'rate': 'Rate This Event',
+        'spotsLeft': 'spots left',
+        'participants': 'participants',
+        'share': 'Share',
+        'myQr': 'My QR Ticket',
+        'edit': 'Edit',
+      },
     }[lang]!;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: CustomScrollView(
         slivers: [
-          // Banner with back button
+          // Banner
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
@@ -149,7 +193,33 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               ),
             ),
             actions: [
-              if (state.user?.role != 'organizer')
+              // Edit button for organizer and admin
+              if (isOrganizer || isAdmin)
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: GestureDetector(
+                    onTap: () async {
+                      final updated = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CreateEventScreen(editEvent: e),
+                        ),
+                      );
+                      if (updated == true && mounted) {
+                        // Reload event
+                        setState(() { _loaded = null; });
+                        _loadIfNeeded();
+                      }
+                    },
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                      child: const Center(child: Icon(Icons.edit_rounded, color: Colors.white, size: 18)),
+                    ),
+                  ),
+                ),
+              // Favourite button for students only
+              if (isStudent)
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: GestureDetector(
@@ -174,7 +244,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 fit: StackFit.expand,
                 children: [
                   Container(decoration: BoxDecoration(gradient: gradient)),
-                  CachedNetworkImage(imageUrl: e.image, fit: BoxFit.cover, color: Colors.black.withOpacity(0.35), colorBlendMode: BlendMode.multiply, errorWidget: (_, __, ___) => const SizedBox()),
+                  CachedNetworkImage(
+                    imageUrl: e.image,
+                    fit: BoxFit.cover,
+                    color: Colors.black.withOpacity(0.35),
+                    colorBlendMode: BlendMode.multiply,
+                    errorWidget: (_, __, ___) => const SizedBox(),
+                  ),
                   Positioned(
                     bottom: 20, left: 20, right: 60,
                     child: Column(
@@ -238,26 +314,40 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Participants avatars
-                  Row(
-                    children: [
-                      ...List.generate(5, (i) {
-                        final colors = [AppColors.primary, AppColors.secondary, AppColors.danger, AppColors.warning, AppColors.pink];
-                        final initials = ['АА','БК','ДМ','ЖН','КС'][i];
-                        return Transform.translate(
-                          offset: Offset(i * -8.0, 0),
-                          child: Container(
-                            width: 30, height: 30,
-                            decoration: BoxDecoration(color: colors[i], shape: BoxShape.circle, border: Border.all(color: AppColors.bg, width: 2)),
-                            child: Center(child: Text(initials, style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white))),
+                  // Participants — show real count
+                  if (participantCount > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        children: [
+                          ...List.generate(participantCount.clamp(0, 5), (i) {
+                            final colors = [AppColors.primary, AppColors.secondary, AppColors.danger, AppColors.warning, AppColors.pink];
+                            return Transform.translate(
+                              offset: Offset(i * -8.0, 0),
+                              child: Container(
+                                width: 30, height: 30,
+                                decoration: BoxDecoration(
+                                  color: colors[i % colors.length],
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppColors.bg, width: 2),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    (i + 1).toString(),
+                                    style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                          SizedBox(width: participantCount.clamp(0, 5) * 2.0 + 8),
+                          Text(
+                            '$participantCount ${T['participants']}',
+                            style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
                           ),
-                        );
-                      }),
-                      const SizedBox(width: 8),
-                      Text('+${e.registered - 5} ${T['participants']}', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
 
                   if (isReg) ...[
                     Container(
@@ -287,8 +377,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   Text(e.getDescription(lang), style: GoogleFonts.inter(fontSize: 14, color: AppColors.text, height: 1.65)),
                   const SizedBox(height: 20),
 
-                  // Rating (student only)
-                  if (state.user?.role == 'student') ...[
+                  // Rating — students only
+                  if (isStudent) ...[
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border, width: 0.5)),
@@ -312,8 +402,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           ),
                           if (userRating != null) ...[
                             const SizedBox(height: 8),
-                            Text('${lang == 'ru' ? 'Ваша оценка' : lang == 'kz' ? 'Сіздің бағаңыз' : 'Your rating'}: $userRating/5',
-                                style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                            Text(
+                              '${lang == 'ru' ? 'Ваша оценка' : lang == 'kz' ? 'Сіздің бағаңыз' : 'Your rating'}: $userRating/5',
+                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+                            ),
                           ],
                         ],
                       ),
@@ -321,7 +413,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // QR ticket (if registered)
+                  // QR ticket (if registered student)
                   if (isReg && _showQR) ...[
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -356,97 +448,125 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   // Action buttons
                   Row(
                     children: [
-                      Expanded(
-                        flex: 3,
-                        child: GestureDetector(
-                          onTap: isFull
-                              ? null
-                              : () async {
-                                  final token = context.read<AppState>().token;
-                                  print('eventId: ${e.id}');
-                                  print('token: $token');
+                      // Student: register/unregister button
+                      if (isStudent) ...[
+                        Expanded(
+                          flex: 3,
+                          child: GestureDetector(
+                            onTap: isFull
+                                ? null
+                                : () async {
+                              final token = context.read<AppState>().token;
+                              if (token == null || token.isEmpty) {
+                                if (!mounted) return;
+                                showSnack(context, getMessage("loginFirst", lang), isError: true);
+                                return;
+                              }
 
-                                  if (token == null || token.isEmpty) {
+                              try {
+                                if (!isReg) {
+                                  await ApiService.registerToEvent(e.id, token);
+                                  setState(() => _isRegistered = true);
+                                  await _loadRegistration();
+                                  await context.read<AppState>().refreshMyRegistrations();
+                                  if (!mounted) return;
+                                  showSnack(context, getMessage("eventRegistered", lang));
+                                  setState(() {});
+                                } else {
+                                  await _loadRegistration();
+                                  final registrationId = _registrationId;
+                                  if (registrationId == null || registrationId.isEmpty) {
                                     if (!mounted) return;
-                                    showSnack(context, getMessage("loginFirst", lang), isError: true);
+                                    showSnack(context, getMessage("registrationNotFound", lang), isError: true);
                                     return;
                                   }
-
-                                  try {
-                                    if (!isReg) {
-                                      final result = await ApiService.registerToEvent(e.id, token);
-                                      print('response: $result');
-
-                                      setState(() => _isRegistered = true);
-
-                                      // After register, refresh /registrations/my so we can cancel using registrationId later.
-                                      await _loadRegistration();
-                                      await context.read<AppState>().refreshMyRegistrations();
-
-                                      if (!mounted) return;
-                                      showSnack(context, getMessage("eventRegistered", lang));
-
-                                      setState(() {});
-                                    } else {
-                                      // IMPORTANT: cancel uses registrationId (not eventId)
-                                      await _loadRegistration();
-                                      final registrationId = _registrationId;
-                                      print('REGISTRATION ID: $registrationId');
-
-                                      if (registrationId == null || registrationId.isEmpty) {
-                                        if (!mounted) return;
-                                        showSnack(context, getMessage("registrationNotFound", lang), isError: true);
-                                        return;
-                                      }
-
-                                      final result = await ApiService.cancelRegistration(registrationId, token);
-                                      print('response: $result');
-
-                                      setState(() => _isRegistered = false);
-
-                                      await _loadRegistration();
-                                      await context.read<AppState>().refreshMyRegistrations();
-
-                                      if (!mounted) return;
-                                      showSnack(context, getMessage("eventCancelled", lang));
-
-                                      setState(() {});
-                                    }
-                                  } catch (err) {
-                                    print('error: ${err.toString()}');
-                                    if (!mounted) return;
-                                    showSnack(context, err.toString(), isError: true);
-                                  }
-                                },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            decoration: BoxDecoration(
-                              gradient: isFull ? null : (isReg ? null : const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight])),
-                              color: isFull ? Colors.grey.shade200 : (isReg ? Colors.white : null),
-                              borderRadius: BorderRadius.circular(14),
-                              border: isReg ? Border.all(color: AppColors.primary, width: 1.5) : null,
-                            ),
-                            child: Center(
-                              child: Text(
-                                isFull ? T['full']! : (isReg ? T['unregister']! : T['register']!),
-                                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: isFull ? AppColors.muted : (isReg ? AppColors.primary : Colors.white)),
+                                  await ApiService.cancelRegistration(registrationId, token);
+                                  setState(() => _isRegistered = false);
+                                  await _loadRegistration();
+                                  await context.read<AppState>().refreshMyRegistrations();
+                                  if (!mounted) return;
+                                  showSnack(context, getMessage("eventCancelled", lang));
+                                  setState(() {});
+                                }
+                              } catch (err) {
+                                if (!mounted) return;
+                                showSnack(context, err.toString(), isError: true);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              decoration: BoxDecoration(
+                                gradient: isFull ? null : (isReg ? null : const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight])),
+                                color: isFull ? Colors.grey.shade200 : (isReg ? Colors.white : null),
+                                borderRadius: BorderRadius.circular(14),
+                                border: isReg ? Border.all(color: AppColors.primary, width: 1.5) : null,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  isFull ? T['full']! : (isReg ? T['unregister']! : T['register']!),
+                                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: isFull ? AppColors.muted : (isReg ? AppColors.primary : Colors.white)),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      if (isReg) ...[
+                        if (isReg) ...[
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: () => setState(() => _showQR = !_showQR),
+                            child: Container(
+                              width: 48, height: 48,
+                              decoration: BoxDecoration(border: Border.all(color: AppColors.primary, width: 1.5), borderRadius: BorderRadius.circular(14)),
+                              child: const Center(child: Icon(Icons.qr_code_rounded, color: AppColors.primary, size: 22)),
+                            ),
+                          ),
+                        ],
                         const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () => setState(() => _showQR = !_showQR),
-                          child: Container(
-                            width: 48, height: 48,
-                            decoration: BoxDecoration(border: Border.all(color: AppColors.primary, width: 1.5), borderRadius: BorderRadius.circular(14)),
-                            child: const Center(child: Icon(Icons.qr_code_rounded, color: AppColors.primary, size: 22)),
+                      ],
+
+                      // Organizer/Admin: edit button (full width)
+                      if (isOrganizer || isAdmin) ...[
+                        Expanded(
+                          flex: 3,
+                          child: GestureDetector(
+                            onTap: () async {
+                              final updated = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CreateEventScreen(editEvent: e),
+                                ),
+                              );
+                              if (updated == true && mounted) {
+                                setState(() { _loaded = null; });
+                                _loadIfNeeded();
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      T['edit']!,
+                                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 10),
                       ],
-                      const SizedBox(width: 10),
+
+                      // Share button (everyone)
                       Container(
                         width: 48, height: 48,
                         decoration: BoxDecoration(border: Border.all(color: AppColors.border, width: 0.5), borderRadius: BorderRadius.circular(14), color: AppColors.card),
