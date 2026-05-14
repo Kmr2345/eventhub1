@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/services/api_service.dart';
 
@@ -12,10 +13,75 @@ class AppState extends ChangeNotifier {
   List<dynamic> favorites = [];
   List<dynamic> notifications = [];
   final Map<String, int> userRatings = {};
+  bool isLoading = true;
+
+  AppState() {
+    _restoreSession();
+  }
+
+  // Restore session from localStorage on app start
+  Future<void> _restoreSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedToken = prefs.getString('token');
+      final savedEmail = prefs.getString('user_email');
+      final savedName = prefs.getString('user_name');
+      final savedRole = prefs.getString('user_role');
+      final savedLang = prefs.getString('language');
+
+      if (savedLang != null) language = savedLang;
+
+      if (savedToken != null && savedEmail != null && savedName != null && savedRole != null) {
+        token = savedToken;
+        user = UserModel(name: savedName, email: savedEmail, role: savedRole);
+
+        // Reload data
+        try {
+          await refreshMyRegistrations();
+          final eventsData = await ApiService.getEvents(savedToken);
+          final parsed = eventsData
+              .whereType<Map<String, dynamic>>()
+              .map(EventModel.fromJson)
+              .toList();
+          events = parsed;
+
+          final favs = await ApiService.getFavorites(savedToken);
+          setFavorites(favs);
+          await refreshNotifications();
+        } catch (_) {
+          // Token expired or invalid — logout
+          await _clearSession();
+        }
+      }
+    } catch (_) {}
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> _saveSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (token != null) await prefs.setString('token', token!);
+    if (user != null) {
+      await prefs.setString('user_email', user!.email);
+      await prefs.setString('user_name', user!.name);
+      await prefs.setString('user_role', user!.role);
+    }
+    await prefs.setString('language', language);
+  }
+
+  Future<void> _clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('user_email');
+    await prefs.remove('user_name');
+    await prefs.remove('user_role');
+  }
 
   // Auth
   void login(String email, String name, String role) {
     user = UserModel(name: name, email: email, role: role);
+    _saveSession();
     notifyListeners();
   }
 
@@ -36,15 +102,17 @@ class AppState extends ChangeNotifier {
     favorites = [];
     notifications = [];
     events = [];
+    _clearSession();
     notifyListeners();
   }
 
   void setLanguage(String lang) {
     language = lang;
+    _saveSession();
     notifyListeners();
   }
 
-  // Favorites (synced with backend via ApiService.getFavorites)
+  // Favorites
   void setFavorites(List<dynamic> favs) {
     favorites = favs;
 
@@ -91,7 +159,6 @@ class AppState extends ChangeNotifier {
 
   // Registration
   bool isRegistered(String eventId) {
-    // Prefer backend truth if loaded.
     if (myRegistrations.isNotEmpty) {
       for (final r in myRegistrations) {
         if (r is! Map) continue;
@@ -103,7 +170,6 @@ class AppState extends ChangeNotifier {
       }
       return false;
     }
-    // Fallback to local-only state (legacy).
     return registrations[eventId]?.contains(user?.email) ?? false;
   }
 
@@ -155,7 +221,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Backwards compatibility (older call site name)
   void markNotificationAsReadLocal(String id) => markNotificationAsRead(id);
 
   String? findRegistrationIdForEvent(String eventId) {
@@ -235,12 +300,11 @@ class AppState extends ChangeNotifier {
     }).toList();
   }
 
-  // keep old name for screens that show favorites list
   List<EventModel> get favoritesEvents => favoriteEvents;
-  List<EventModel> get myEvents  {
+
+  List<EventModel> get myEvents {
     final u = user;
     if (u == null) return const [];
-    // Backend may store organizer by id or name; best-effort filter.
     return events.where((e) => e.organizerName == u.name || e.organizerId == u.email).toList();
   }
 }

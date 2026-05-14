@@ -19,7 +19,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final _nameCtrl     = TextEditingController();
   final _emailCtrl    = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  String _role = 'student';
   bool isRegister = false;
   bool _emailInvalid = false;
   bool _passwordInvalid = false;
@@ -32,10 +31,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'nameHint': 'Ваше имя',
       'email': 'Email',
       'password': 'Пароль',
-      'student': 'Студент',
-      'organizer': 'Организатор',
       'login': 'Войти',
-      'register': 'Зарегистрироваться',
       'createAccount': 'Создать аккаунт',
       'signupPrompt': 'Нет аккаунта? ',
       'signupCta': 'Зарегистрируйтесь',
@@ -50,10 +46,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'nameHint': 'Атыңыз',
       'email': 'Email',
       'password': 'Құпия сөз',
-      'student': 'Студент',
-      'organizer': 'Ұйымдастырушы',
       'login': 'Кіру',
-      'register': 'Тіркелу',
       'createAccount': 'Аккаунт ашу',
       'signupPrompt': 'Аккаунтыңыз жоқ па? ',
       'signupCta': 'Тіркеліңіз',
@@ -68,10 +61,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'nameHint': 'Your name',
       'email': 'Email',
       'password': 'Password',
-      'student': 'Student',
-      'organizer': 'Organizer',
       'login': 'Log In',
-      'register': 'Sign up',
       'createAccount': 'Create account',
       'signupPrompt': 'Don\'t have an account? ',
       'signupCta': 'Sign up',
@@ -183,37 +173,6 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Role selector
-                      Container(
-                        decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(14)),
-                        padding: const EdgeInsets.all(4),
-                        child: Row(
-                          children: ['student', 'organizer'].map((r) {
-                            final active = _role == r;
-                            return Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _role = r),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(vertical: 11),
-                                  decoration: BoxDecoration(
-                                    color: active ? AppColors.primary : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      r == 'student' ? t['student']! : t['organizer']!,
-                                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.muted),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
                       if (isRegister) ...[
                         _buildField(t['name']!, _nameCtrl, t['nameHint']!, false),
                         const SizedBox(height: 14),
@@ -230,33 +189,27 @@ class _AuthScreenState extends State<AuthScreen> {
                           final email = _emailCtrl.text.trim();
                           final password = _passwordCtrl.text.trim();
 
-                          if (_emailInvalid || _passwordInvalid) {
-                            setState(() {
-                              _emailInvalid = false;
-                              _passwordInvalid = false;
-                            });
-                          }
+                          setState(() {
+                            _emailInvalid = false;
+                            _passwordInvalid = false;
+                          });
 
                           if (email.isEmpty) {
-                            if (!mounted) return;
                             setState(() => _emailInvalid = true);
                             showSnack(context, getError("emptyEmail", lang), isError: true);
                             return;
                           }
                           if (password.isEmpty) {
-                            if (!mounted) return;
                             setState(() => _passwordInvalid = true);
                             showSnack(context, getError("emptyPassword", lang), isError: true);
                             return;
                           }
                           if (!isValidEmail(email)) {
-                            if (!mounted) return;
                             setState(() => _emailInvalid = true);
                             showSnack(context, getError("invalidEmail", lang), isError: true);
                             return;
                           }
                           if (isRegister && !isValidPassword(password)) {
-                            if (!mounted) return;
                             setState(() => _passwordInvalid = true);
                             showSnack(context, getError("weakPassword", lang), isError: true);
                             return;
@@ -264,10 +217,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                           try {
                             if (!isRegister) {
-                              print("LOGIN START");
-                              print(email);
                               final result = await ApiService.login(email, password);
-                              print("RESPONSE: $result");
 
                               final token = result['token']?.toString();
                               final userRaw = result['user'];
@@ -276,12 +226,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                 throw Exception('Invalid response: token/user missing');
                               }
                               final user = userRaw.cast<String, dynamic>();
-                              final backendRole = user['role']?.toString();
-                              if (backendRole != _role) {
-                                if (!mounted) return;
-                                showSnack(context, getError("wrongRole", lang), isError: true);
-                                return;
-                              }
 
                               state.setToken(token);
                               state.login(
@@ -289,7 +233,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                 user['name'] as String,
                                 user['role'] as String,
                               );
-                              // Load registrations so event list cards show registered badge.
                               await state.refreshMyRegistrations();
                               final events = await ApiService.getEvents(token);
                               final parsed = events
@@ -305,14 +248,16 @@ class _AuthScreenState extends State<AuthScreen> {
                               if (name.isEmpty) {
                                 throw Exception(t['nameHint']!);
                               }
-
-                              final result = await ApiService.register(name, email, password, _role);
-                              print("RESPONSE: $result");
+                              // Роль всегда student при регистрации
+                              await ApiService.register(name, email, password, 'student');
 
                               if (!mounted) return;
                               showSnack(context, getMessage("registerSuccess", lang));
-                              setState(() => isRegister = false);
-                              await state.refreshMyRegistrations();
+                              setState(() {
+                                isRegister = false;
+                                _emailInvalid = false;
+                                _passwordInvalid = false;
+                              });
                             }
 
                           } catch (e) {
@@ -351,7 +296,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       const SizedBox(height: 12),
                       Center(
                         child: GestureDetector(
-                          onTap: () => setState(() => isRegister = !isRegister),
+                          onTap: () => setState(() {
+                            isRegister = !isRegister;
+                            _emailInvalid = false;
+                            _passwordInvalid = false;
+                          }),
                           child: RichText(
                             textAlign: TextAlign.center,
                             text: TextSpan(
@@ -392,38 +341,43 @@ class _AuthScreenState extends State<AuthScreen> {
   );
 
   Widget _buildField(
-    String label,
-    TextEditingController ctrl,
-    String hint,
-    bool obscure, {
-    bool invalid = false,
-  }) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
-      const SizedBox(height: 6),
-      TextField(
-        controller: ctrl,
-        obscureText: obscure,
-        style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.inter(color: AppColors.muted),
-          filled: true, fillColor: AppColors.bg,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
+      String label,
+      TextEditingController ctrl,
+      String hint,
+      bool obscure, {
+        bool invalid = false,
+      }) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: ctrl,
+            obscureText: obscure,
+            style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.inter(color: AppColors.muted),
+              filled: true,
+              fillColor: AppColors.bg,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+            ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
-          ),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
-        ),
-      ),
-    ],
-  );
+        ],
+      );
 
   bool isValidEmail(String email) {
     final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');

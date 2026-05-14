@@ -36,8 +36,12 @@ class EventHubApp extends StatelessWidget {
         Locale('en'),
       ],
       home: Consumer<AppState>(
-        builder: (_, state, __) =>
-        state.user == null ? const AuthScreen() : const MainScreen(),
+        builder: (_, state, __) {
+          if (state.isLoading) return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+          return state.user == null ? const AuthScreen() : const MainScreen();
+        },
       ),
     );
   }
