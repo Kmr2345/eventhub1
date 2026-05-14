@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../data/app_state.dart';
 import '../models/event_model.dart';
+import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import 'create_event_screen.dart';
+import 'scanner_screen.dart';
 
 class OrganizerScreen extends StatelessWidget {
   const OrganizerScreen({super.key});
@@ -19,9 +24,9 @@ class OrganizerScreen extends StatelessWidget {
     final avgRating = events.isEmpty ? 0.0 : events.fold(0.0, (s, e) => s + e.rating) / events.length;
 
     final T = {
-      'ru': {'title': 'Мои мероприятия', 'events': 'Событий', 'participants': 'Участников', 'rating': 'Рейтинг', 'registered': 'зарег.', 'edit': 'Редактировать', 'delete': 'Удалить', 'export': 'Экспорт CSV', 'noEvents': 'Нет мероприятий', 'create': 'Создайте первое мероприятие'},
-      'kz': {'title': 'Менің іс-шараларым', 'events': 'Іс-шаралар', 'participants': 'Қатысушылар', 'rating': 'Рейтинг', 'registered': 'тіркелді', 'edit': 'Өңдеу', 'delete': 'Жою', 'export': 'CSV экспорт', 'noEvents': 'Іс-шара жоқ', 'create': 'Алғашқы іс-шараны жасаңыз'},
-      'en': {'title': 'My Events', 'events': 'Events', 'participants': 'Participants', 'rating': 'Rating', 'registered': 'reg.', 'edit': 'Edit', 'delete': 'Delete', 'export': 'Export CSV', 'noEvents': 'No Events Yet', 'create': 'Create your first event'},
+      'ru': {'title': 'Мои мероприятия', 'events': 'Событий', 'participants': 'Участников', 'rating': 'Рейтинг', 'registered': 'зарег.', 'edit': 'Редактировать', 'delete': 'Удалить', 'export': 'Экспорт CSV', 'noEvents': 'Нет мероприятий', 'create': 'Создайте первое мероприятие', 'scan': 'Сканировать QR'},
+      'kz': {'title': 'Менің іс-шараларым', 'events': 'Іс-шаралар', 'participants': 'Қатысушылар', 'rating': 'Рейтинг', 'registered': 'тіркелді', 'edit': 'Өңдеу', 'delete': 'Жою', 'export': 'CSV экспорт', 'noEvents': 'Іс-шара жоқ', 'create': 'Алғашқы іс-шараны жасаңыз', 'scan': 'QR сканерлеу'},
+      'en': {'title': 'My Events', 'events': 'Events', 'participants': 'Participants', 'rating': 'Rating', 'registered': 'reg.', 'edit': 'Edit', 'delete': 'Delete', 'export': 'Export CSV', 'noEvents': 'No Events Yet', 'create': 'Create your first event', 'scan': 'Scan QR'},
     }[lang]!;
 
     return CustomScrollView(
@@ -52,25 +57,25 @@ class OrganizerScreen extends StatelessWidget {
         // Events list
         events.isEmpty
             ? SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('🎪', style: TextStyle(fontSize: 52)),
-                      const SizedBox(height: 14),
-                      Text(T['noEvents']!, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
-                      const SizedBox(height: 8),
-                      Text(T['create']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
-                    ],
-                  ),
-                ),
-              )
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('🎪', style: TextStyle(fontSize: 52)),
+                const SizedBox(height: 14),
+                Text(T['noEvents']!, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
+                const SizedBox(height: 8),
+                Text(T['create']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+              ],
+            ),
+          ),
+        )
             : SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) => _OrganizerEventCard(event: events[i], lang: lang, labels: T, state: state),
-                  childCount: events.length,
-                ),
-              ),
+          delegate: SliverChildBuilderDelegate(
+                (_, i) => _OrganizerEventCard(event: events[i], lang: lang, labels: T, state: state),
+            childCount: events.length,
+          ),
+        ),
         const SliverToBoxAdapter(child: SizedBox(height: 90)),
       ],
     );
@@ -187,9 +192,59 @@ class _OrganizerEventCard extends StatelessWidget {
                 ],
 
                 const SizedBox(height: 12),
+
+                // Scan QR button
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ScannerScreen()),
+                  ),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withOpacity(0.07),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.secondary.withOpacity(0.3), width: 0.5),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.qr_code_scanner_rounded, size: 16, color: AppColors.secondary),
+                        const SizedBox(width: 6),
+                        Text(labels['scan']!, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
+                      ],
+                    ),
+                  ),
+                ),
+
                 // Export button
                 GestureDetector(
-                  onTap: () { /* CSV export logic */ },
+                  onTap: () async {
+                    final token = context.read<AppState>().token ?? '';
+                    try {
+                      final regs = await ApiService.getEventRegistrations(event.id, token);
+                      // Build CSV
+                      final lines = <String>['Name,Email,Status,Date'];
+                      for (final r in regs) {
+                        final user = r['userId'];
+                        final name = (user is Map ? user['name'] : '')?.toString().replaceAll(',', ' ') ?? '';
+                        final email = (user is Map ? user['email'] : '')?.toString() ?? '';
+                        final status = r['status']?.toString() ?? '';
+                        final date = r['createdAt']?.toString().substring(0, 10) ?? '';
+                        lines.add('$name,$email,$status,$date');
+                      }
+                      final csv = lines.join('\n');
+                      final dir = await getTemporaryDirectory();
+                      final file = File('${dir.path}/${event.titleRu.replaceAll(' ', '_')}.csv');
+                      await file.writeAsString(csv);
+                      await Share.shareXFiles([XFile(file.path)], text: 'Участники: ${event.titleRu}');
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Ошибка: ${e.toString()}')),
+                      );
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.07), borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 0.5)),

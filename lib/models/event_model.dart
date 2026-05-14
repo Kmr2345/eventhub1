@@ -86,7 +86,7 @@ class EventModel {
       category: _str(json['category'], ''),
       image: _str(json['image'], ''),
       capacity: _int(json['capacity'], 0),
-      registered: _int(json['registered'], 0),
+      registered: _int(json['registeredCount'] ?? json['registered'], 0),
       organizerId: _str(orgId, ''),
       organizerName: _str(orgName, ''),
       rating: _double(json['rating'], 0),

@@ -424,14 +424,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           const SizedBox(height: 4),
                           Text(when, style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
                           const SizedBox(height: 16),
-                          QrImageView(
-                            data: _registrationId ?? '',
-                            version: QrVersions.auto,
-                            size: 130,
-                            foregroundColor: AppColors.primary,
-                          ),
+                          if (_registrationId == null)
+                            const SizedBox(
+                              height: 130,
+                              width: 130,
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                          else
+                            QrImageView(
+                              data: _registrationId!,
+                              version: QrVersions.auto,
+                              size: 130,
+                              foregroundColor: AppColors.primary,
+                            ),
                           const SizedBox(height: 12),
-                          Text('ID: ${_registrationId ?? '-'}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                          Text('ID: ${_registrationId ?? '...'}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -466,7 +473,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               try {
                                 if (!isReg) {
                                   await ApiService.registerToEvent(e.id, token);
-                                  setState(() => _isRegistered = true);
+                                  setState(() {
+                                    _isRegistered = true;
+                                    e.registered += 1;
+                                  });
                                   await _loadRegistration();
                                   await context.read<AppState>().refreshMyRegistrations();
                                   if (!mounted) return;
@@ -481,7 +491,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     return;
                                   }
                                   await ApiService.cancelRegistration(registrationId, token);
-                                  setState(() => _isRegistered = false);
+                                  setState(() {
+                                    _isRegistered = false;
+                                    e.registered -= 1;
+                                  });
                                   await _loadRegistration();
                                   await context.read<AppState>().refreshMyRegistrations();
                                   if (!mounted) return;

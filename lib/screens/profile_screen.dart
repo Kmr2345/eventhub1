@@ -61,26 +61,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 4),
                 Text(user.email, style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withOpacity(0.8))),
                 const SizedBox(height: 4),
-                Text('${user.role == 'student' ? (lang == 'ru' ? 'Студент' : lang == 'kz' ? 'Студент' : 'Student') : (lang == 'ru' ? 'Организатор' : lang == 'kz' ? 'Ұйымдастырушы' : 'Organizer')} · Astana IT University',
+                Text('${user.role == 'student' ? (lang == 'ru' ? 'Студент' : lang == 'kz' ? 'Студент' : 'Student') : user.role == 'admin' ? (lang == 'ru' ? 'Администратор' : lang == 'kz' ? 'Әкімші' : 'Admin') : (lang == 'ru' ? 'Организатор' : lang == 'kz' ? 'Ұйымдастырушы' : 'Organizer')} · Astana IT University',
                     style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withOpacity(0.75))),
                 const SizedBox(height: 14),
               ],
             ),
           ),
 
-          // Stats
-          Container(
-            color: AppColors.card,
-            child: Row(
-              children: [
-                _statBox('$attendedCount', T['attended']!),
-                _divider(),
-                _statBox('${state.favorites.length}', T['saved']!),
-                _divider(),
-                _statBox('${state.userRatings.length}', T['reviews']!),
-              ],
+          // Stats (students only)
+          if (user.role == 'student')
+            Container(
+              color: AppColors.card,
+              child: Row(
+                children: [
+                  _statBox('$attendedCount', T['attended']!),
+                  _divider(),
+                  _statBox('${state.favorites.length}', T['saved']!),
+                  _divider(),
+                  _statBox('${state.userRatings.length}', T['reviews']!),
+                ],
+              ),
             ),
-          ),
 
           const SizedBox(height: 16),
 
@@ -94,53 +95,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: AppColors.card,
               child: attendedCount == 0
                   ? Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(T['historyEmpty']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
-                      ),
-                    )
+                padding: const EdgeInsets.all(16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(T['historyEmpty']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                ),
+              )
                   : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: attendedCount,
-                      itemBuilder: (_, i) {
-                        final reg = attendedRegs.elementAt(i);
-                        final ev = reg['eventId'];
-                        final title = ev is Map
-                            ? (ev['title'] ?? ev['titleRu'] ?? ev['titleKz'] ?? '').toString()
-                            : '';
-                        final date = ev is Map
-                            ? (ev['eventDate'] ?? ev['date'] ?? '').toString()
-                            : '';
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: attendedCount,
+                itemBuilder: (_, i) {
+                  final reg = attendedRegs.elementAt(i);
+                  final ev = reg['eventId'];
+                  final title = ev is Map
+                      ? (ev['title'] ?? ev['titleRu'] ?? ev['titleKz'] ?? '').toString()
+                      : '';
+                  final date = ev is Map
+                      ? (ev['eventDate'] ?? ev['date'] ?? '').toString()
+                      : '';
 
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5))),
-                          child: Row(
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5))),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+                          child: const Center(child: Icon(Icons.event_rounded, color: AppColors.primary)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
-                                child: const Center(child: Icon(Icons.event_rounded, color: AppColors.primary)),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
-                                    if (date.isNotEmpty) Text(date, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.check_circle_rounded, color: AppColors.secondary, size: 20),
+                              Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                              if (date.isNotEmpty) Text(date, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                             ],
                           ),
-                        );
-                      },
+                        ),
+                        const Icon(Icons.check_circle_rounded, color: AppColors.secondary, size: 20),
+                      ],
                     ),
+                  );
+                },
+              ),
             ),
             const SizedBox(height: 16),
           ],

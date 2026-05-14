@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5000';
+  static const String baseUrl = 'http://192.168.1.82:5000';
 
   static void _logRequest({
     required String method,
@@ -157,9 +157,9 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> createEvent(
-    Map<String, dynamic> data,
-    String token,
-  ) async {
+      Map<String, dynamic> data,
+      String token,
+      ) async {
     final url = '$baseUrl/events';
     final body = jsonEncode(data);
     _logRequest(method: 'POST', url: url, token: token, body: body);
@@ -199,9 +199,9 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> registerToEvent(
-    String eventId,
-    String token,
-  ) async {
+      String eventId,
+      String token,
+      ) async {
     final url = '$baseUrl/registrations';
     final body = jsonEncode({'eventId': eventId});
     _logRequest(method: 'POST', url: url, token: token, body: body);
@@ -245,9 +245,9 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> cancelRegistration(
-    String registrationId,
-    String token,
-  ) async {
+      String registrationId,
+      String token,
+      ) async {
     final url = '$baseUrl/registrations/$registrationId/cancel';
     _logRequest(method: 'PUT', url: url, token: token);
 
@@ -271,11 +271,11 @@ class ApiService {
 
   // REGISTER
   static Future<Map<String, dynamic>> register(
-    String name,
-    String email,
-    String password,
-    String role,
-  ) async {
+      String name,
+      String email,
+      String password,
+      String role,
+      ) async {
     final url = '$baseUrl/auth/register';
     final body = jsonEncode({
       'name': name,
@@ -367,6 +367,16 @@ class ApiService {
     }
     if (decoded is List) return decoded;
     throw Exception('Unexpected response format: ${decoded.runtimeType}');
+  }
+
+  static Future<List> getEventRegistrations(String eventId, String token) async {
+    final url = '$baseUrl/registrations/event/$eventId';
+    _logRequest(method: 'GET', url: url, token: token);
+    final res = await http.get(Uri.parse(url), headers: {'Authorization': token});
+    final decoded = _decodeAny(res);
+    if (res.statusCode != 200) throw _httpError(res);
+    if (decoded is List) return decoded;
+    throw Exception('Unexpected response format');
   }
 
   static Future<dynamic> markAttended(String registrationId, String token) async {
