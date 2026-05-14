@@ -97,12 +97,22 @@ router.put("/:id/cancel", auth, async (req, res) => {
 });
 
 // MARK AS ATTENDED (только organizer)
+// СТАЛО:
 router.put("/:id/attended", auth, async (req, res) => {
   try {
     const registration = await Registration.findById(req.params.id);
     if (!registration) return res.status(404).json("Registration not found");
     if (req.user.role !== "organizer") return res.status(403).json("Only organizer can mark attendance");
-    if (registration.status !== "confirmed") return res.status(400).json("User must confirm first");
+
+    // Уже отсканирован
+    if (registration.status === "attended") {
+      return res.status(409).json("Already attended");
+    }
+
+    if (!["registered", "confirmed"].includes(registration.status)) {
+      return res.status(400).json("Registration is not active");
+    }
+
     registration.status = "attended";
     await registration.save();
     res.json(registration);
