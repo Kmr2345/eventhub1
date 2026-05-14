@@ -8,8 +8,8 @@ const createNotification = require("../utils/createNotification");
 // CREATE EVENT
 router.post("/", auth, async (req, res) => {
   try {
-    if (req.user.role !== "organizer") {
-      return res.status(403).json("Only organizers can create events");
+    if (req.user.role !== "organizer" && req.user.role !== "admin") {
+      return res.status(403).json("Only organizers and admins can create events");
     }
 
     const event = new Event({
