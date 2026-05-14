@@ -1,5 +1,2 @@
-Future<void> downloadCsv(String csv, String filename) async {
-  throw UnsupportedError(
-    'downloadCsv not supported on this platform',
-  );
-}
+export 'csv_downloader_mobile.dart'
+    if (dart.library.html) 'csv_downloader_web.dart';
