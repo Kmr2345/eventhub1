@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../data/app_state.dart';
 import '../theme/app_theme.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -64,6 +65,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text('${user.role == 'student' ? (lang == 'ru' ? 'Студент' : lang == 'kz' ? 'Студент' : 'Student') : user.role == 'admin' ? (lang == 'ru' ? 'Администратор' : lang == 'kz' ? 'Әкімші' : 'Admin') : (lang == 'ru' ? 'Организатор' : lang == 'kz' ? 'Ұйымдастырушы' : 'Organizer')} · Astana IT University',
                     style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withOpacity(0.75))),
                 const SizedBox(height: 14),
+                // Edit profile button
+                GestureDetector(
+                  onTap: () async {
+                    final updated = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                    );
+                    if (updated == true && mounted) setState(() {});
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.edit_rounded, color: Colors.white, size: 14),
+                        const SizedBox(width: 6),
+                        Text(
+                          lang == 'ru' ? 'Редактировать профиль'
+                              : lang == 'kz' ? 'Профильді өңдеу'
+                              : 'Edit Profile',
+                          style: GoogleFonts.inter(
+                              fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

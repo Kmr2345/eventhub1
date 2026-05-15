@@ -9,6 +9,7 @@ import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/widgets/app_snack.dart';
+import 'package:eventhub/screens/verify_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -38,6 +39,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'signinPrompt': 'Уже есть аккаунт? ',
       'signinCta': 'Войти',
       'registerSuccess': 'Регистрация успешна',
+      'invalidEmail': 'Введите корректный email (например: name@gmail.com)',
     },
     'kz': {
       'welcome': 'Қош келдіңіз',
@@ -53,6 +55,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'signinPrompt': 'Аккаунтыңыз бар ма? ',
       'signinCta': 'Кіру',
       'registerSuccess': 'Тіркелу сәтті өтті',
+      'invalidEmail': 'Дұрыс email енгізіңіз (мысалы: name@gmail.com)',
     },
     'en': {
       'welcome': 'Welcome to',
@@ -68,6 +71,7 @@ class _AuthScreenState extends State<AuthScreen> {
       'signinPrompt': 'Already have an account? ',
       'signinCta': 'Log in',
       'registerSuccess': 'Registration successful',
+      'invalidEmail': 'Enter a valid email (e.g. name@gmail.com)',
     },
   };
 
@@ -217,7 +221,17 @@ class _AuthScreenState extends State<AuthScreen> {
 
                           try {
                             if (!isRegister) {
+                              // LOGIN
                               final result = await ApiService.login(email, password);
+
+                              // Если email не верифицирован — сервер вернёт needVerify
+                              if (result['needVerify'] == true) {
+                                if (!mounted) return;
+                                Navigator.push(context, MaterialPageRoute(
+                                  builder: (_) => VerifyScreen(email: result['email'] as String),
+                                ));
+                                return;
+                              }
 
                               final token = result['token']?.toString();
                               final userRaw = result['user'];
@@ -245,20 +259,17 @@ class _AuthScreenState extends State<AuthScreen> {
                               state.setFavorites(favs);
                               await state.refreshNotifications();
                             } else {
+                              // REGISTER — отправляем код и переходим на экран верификации
                               final name = _nameCtrl.text.trim();
                               if (name.isEmpty) {
                                 throw Exception(t['nameHint']!);
                               }
-                              // Роль всегда student при регистрации
                               await ApiService.register(name, email, password, 'student');
 
                               if (!mounted) return;
-                              showSnack(context, getMessage("registerSuccess", lang));
-                              setState(() {
-                                isRegister = false;
-                                _emailInvalid = false;
-                                _passwordInvalid = false;
-                              });
+                              Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => VerifyScreen(email: email),
+                              ));
                             }
 
                           } catch (e) {
@@ -381,8 +392,29 @@ class _AuthScreenState extends State<AuthScreen> {
       );
 
   bool isValidEmail(String email) {
-    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    return regex.hasMatch(email);
+    // Строгая проверка: локальная часть, @, домен, точка, TLD минимум 2 символа
+    final regex = RegExp(
+      r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
+    );
+    if (!regex.hasMatch(email)) return false;
+
+    // Дополнительные проверки
+    final parts = email.split('@');
+    if (parts.length != 2) return false;
+    final local = parts[0];
+    final domain = parts[1];
+
+    // Локальная часть не может начинаться или заканчиваться точкой
+    if (local.startsWith('.') || local.endsWith('.')) return false;
+    // Нет двух точек подряд
+    if (local.contains('..') || domain.contains('..')) return false;
+    // Домен должен содержать хотя бы одну точку
+    if (!domain.contains('.')) return false;
+    // TLD не может быть только цифрами
+    final tld = domain.split('.').last;
+    if (RegExp(r'^\d+$').hasMatch(tld)) return false;
+
+    return true;
   }
 
   bool isValidPassword(String password) {

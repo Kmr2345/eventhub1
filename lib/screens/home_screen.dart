@@ -62,7 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (source.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    final trending = source.take(3).toList();
+    double popularityScore(dynamic e) {
+      final rating = (e.rating ?? 0.0) as double;
+      final fill = e.capacity > 0 ? e.registered / e.capacity : 0.0;
+      return rating * 0.6 + fill * 0.4;
+    }
+    final trendingTop = ([...source]..sort((a, b) => popularityScore(b).compareTo(popularityScore(a)))).take(3).toList();
     final upcoming = source;
 
     return CustomScrollView(
@@ -99,9 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: trending.length,
+              itemCount: trendingTop.length,
               itemBuilder: (_, i) {
-                final e = trending[i];
+                final e = trendingTop[i];
                 return GestureDetector(
                   onTap: () async {
                     await Navigator.push(

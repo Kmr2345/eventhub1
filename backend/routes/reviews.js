@@ -120,6 +120,79 @@ router.get("/event/:eventId", async (req, res) => {
   }
 });
 
+// PATCH — редактировать отзыв (студент — свой, админ — любой)
+router.patch("/:id", auth, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json("Review not found");
+
+    const isOwner = review.userId.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json("Not allowed");
+    }
+
+    if (rating !== undefined) {
+      if (rating < 1 || rating > 5) return res.status(400).json("Rating must be between 1 and 5");
+      review.rating = rating;
+    }
+    if (comment !== undefined) {
+      review.comment = comment;
+    }
+
+    await review.save();
+
+    // Пересчитываем средний рейтинг события
+    const allReviews = await Review.find({ eventId: review.eventId });
+    const avg = allReviews.length
+      ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+      : 0;
+    await Event.findByIdAndUpdate(review.eventId, {
+      avgRating: Math.round(avg * 10) / 10,
+      reviewCount: allReviews.length,
+    });
+
+    const populated = await review.populate("userId", "name");
+    res.json(populated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE — удалить отзыв (студент — свой, админ — любой)
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json("Review not found");
+
+    const isOwner = review.userId.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json("Not allowed");
+    }
+
+    const eventId = review.eventId;
+    await review.deleteOne();
+
+    // Пересчитываем рейтинг события
+    const allReviews = await Review.find({ eventId });
+    const avg = allReviews.length
+      ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+      : 0;
+    await Event.findByIdAndUpdate(eventId, {
+      avgRating: Math.round(avg * 10) / 10,
+      reviewCount: allReviews.length,
+    });
+
+    res.json({ message: "Review deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET — проверить может ли пользователь оставить отзыв
 router.get("/can-review/:eventId", auth, async (req, res) => {
   try {

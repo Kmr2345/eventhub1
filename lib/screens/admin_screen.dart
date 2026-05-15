@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:eventhub/data/app_state.dart';
@@ -282,7 +283,6 @@ class _AdminScreenState extends State<AdminScreen>
       {'label': 'Студентов', 'value': _stats['students'], 'icon': Icons.school_rounded, 'color': Colors.green},
       {'label': 'Организаторов', 'value': _stats['organizers'], 'icon': Icons.manage_accounts_rounded, 'color': Colors.orange},
       {'label': 'Событий', 'value': _stats['totalEvents'], 'icon': Icons.event_rounded, 'color': Colors.blue},
-      {'label': 'Регистраций', 'value': _stats['totalRegistrations'], 'icon': Icons.how_to_reg_rounded, 'color': Colors.purple},
     ];
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -482,53 +482,164 @@ class _AdminScreenState extends State<AdminScreen>
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (_, i) {
         final e = events[i];
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border, width: 0.5),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+        return GestureDetector(
+          onTap: () => _showEventDetails(context, e, state),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border, width: 0.5),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.event_rounded,
+                      color: AppColors.primary, size: 20),
                 ),
-                child: const Icon(Icons.event_rounded,
-                    color: AppColors.primary, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(e.getTitle(state.language),
-                        style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: AppColors.text),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                    Text(e.organizerName,
-                        style: GoogleFonts.inter(
-                            fontSize: 11, color: AppColors.muted)),
-                    Text('${e.registered} / ${e.capacity} участников',
-                        style: GoogleFonts.inter(
-                            fontSize: 11, color: AppColors.muted)),
-                  ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(e.getTitle(state.language),
+                          style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: AppColors.text),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      Text(e.organizerName,
+                          style: GoogleFonts.inter(
+                              fontSize: 11, color: AppColors.muted)),
+                      Text('${e.registered} / ${e.capacity} участников',
+                          style: GoogleFonts.inter(
+                              fontSize: 11, color: AppColors.muted)),
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline_rounded,
-                    color: Colors.red, size: 22),
-                onPressed: () =>
-                    _deleteEvent(e.id, e.getTitle(state.language)),
-              ),
-            ],
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded,
+                      color: Colors.red, size: 22),
+                  onPressed: () =>
+                      _deleteEvent(e.id, e.getTitle(state.language)),
+                ),
+              ],
+            ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showEventDetails(BuildContext context, dynamic e, AppState state) async {
+    List<dynamic> participants = [];
+    bool loading = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (ctx, setModal) {
+            if (loading) {
+              ApiService.getEventParticipants(e.id, state.token!).then((data) {
+                setModal(() { participants = data; loading = false; });
+              }).catchError((_) { setModal(() => loading = false); });
+            }
+            final lang = state.language;
+            final title = e.getTitle(lang);
+            final date = DateFormat('dd MMM yyyy, HH:mm').format(e.eventDate);
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(child: Container(width: 40, height: 4,
+                      decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
+                  const SizedBox(height: 16),
+                  Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    const Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(date, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                  ]),
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    const Icon(Icons.location_on_rounded, size: 13, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(e.getLocation(lang), style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                  ]),
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    const Icon(Icons.person_rounded, size: 13, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text('Организатор: ${e.organizerName}', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                  ]),
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    const Icon(Icons.people_rounded, size: 13, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text('${e.registered} / ${e.capacity} участников', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                  ]),
+                  const Divider(height: 24),
+                  Text('Участники', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.text)),
+                  const SizedBox(height: 10),
+                  loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : participants.isEmpty
+                      ? Text('Нет зарегистрированных', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted))
+                      : SizedBox(
+                    height: 220,
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: participants.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (_, i) {
+                        final p = participants[i];
+                        final user = p['userId'] ?? {};
+                        final name = user['name'] ?? '—';
+                        final email = user['email'] ?? '—';
+                        final status = p['status'] ?? 'registered';
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                          ),
+                          title: Text(name, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                          subtitle: Text(email, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: status == 'attended' ? Colors.green.withOpacity(0.1) : AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(status == 'attended' ? 'Присутствовал' : 'Зарегистрирован',
+                                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600,
+                                    color: status == 'attended' ? Colors.green : AppColors.primary)),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );

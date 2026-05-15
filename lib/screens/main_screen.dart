@@ -81,14 +81,14 @@ class _MainScreenState extends State<MainScreen> {
       const HomeScreen(),
       const SearchScreen(),
       const OrganizerScreen(),
-      const CreateEventScreen(),
+      CreateEventScreen(onCreated: () => _setIndex(0)),
       const ProfileScreen(),
     ];
 
     final adminTabs = [
       const HomeScreen(),
       const AdminScreen(),
-      const CreateEventScreen(),
+      CreateEventScreen(onCreated: () => _setIndex(0)),
       const ProfileScreen(),
     ];
 

@@ -1,7 +1,11 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cron = require("node-cron");
 const cors = require("cors");
+const path = require("path");
+const multer = require("multer");
+const auth = require("./middleware/auth");
 const Event = require("./models/Event");
 const Registration = require("./models/Registration");
 const createNotification = require("./utils/createNotification");
@@ -10,8 +14,43 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Static files for uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Multer setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, "uploads");
+    require("fs").mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (req, file, cb) => {
+      if (
+        file.mimetype.startsWith("image/") ||
+        file.mimetype === "application/octet-stream" ||
+        /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname)
+      ) cb(null, true);
+      else cb(new Error("Only image files allowed"));
+    },
+});
+
+// UPLOAD IMAGE
+app.post("/upload", auth, upload.single("image"), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  res.json({ url });
+});
+
 // MongoDB
-mongoose.connect("mongodb://kunshuak06_db_user:57In2m69XsT4NExt@ac-8pbn1os-shard-00-00.x2otkv6.mongodb.net:27017,ac-8pbn1os-shard-00-01.x2otkv6.mongodb.net:27017,ac-8pbn1os-shard-00-02.x2otkv6.mongodb.net:27017/eventhub?ssl=true&replicaSet=atlas-115kpv-shard-0&authSource=admin&appName=Eventhub")
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 
@@ -36,6 +75,9 @@ app.use("/admin", adminRoutes);
 
 const reviewRoutes = require("./routes/reviews");
 app.use("/reviews", reviewRoutes);
+
+const profileRoutes = require("./routes/profile");
+app.use("/profile", profileRoutes);
 
 // Reminder cron (1 day before)
 cron.schedule("0 * * * *", async () => {
@@ -76,6 +118,6 @@ app.get("/", (req, res) => {
   res.send("API running");
 });
 
-app.listen(5000, () => {
-  console.log("Server started on port 5000");
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`Server started on port ${process.env.PORT || 5000}`);
 });

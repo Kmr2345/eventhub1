@@ -29,6 +29,9 @@ router.post("/", auth, async (req, res) => {
     if (event.eventDate && new Date(event.eventDate) < new Date()) {
       return res.status(400).json("Registration is closed — event has already passed");
     }
+    if (event.capacity && event.registeredCount >= event.capacity) {
+      return res.status(400).json("No spots left — event is full");
+    }
 
     let registration = await Registration.findOne({
       userId: req.user.id,

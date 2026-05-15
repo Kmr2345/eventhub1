@@ -13,6 +13,9 @@ import 'package:eventhub/i18n/labels.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/widgets/app_snack.dart';
 import 'package:eventhub/screens/create_event_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final EventModel? event;
@@ -43,6 +46,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   final _commentCtrl = TextEditingController();
   bool _submittingReview = false;
 
+  // Review editing
+  String? _editingReviewId;
+  int _editRating = 0;
+  final _editCommentCtrl = TextEditingController();
+
   EventModel? get _event => widget.event ?? _loaded;
 
   @override
@@ -58,6 +66,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   void dispose() {
     _scrollController.dispose(); // ✅
     _commentCtrl.dispose();
+    _editCommentCtrl.dispose();
     super.dispose();
   }
 
@@ -249,6 +258,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         'alreadyReviewed': 'Вы уже оставили отзыв',
         'attendRequired': 'Только посетившие могут оставить отзыв',
         'ratings': 'оценок',
+        'save': 'Сохранить',
+        'cancel': 'Отмена',
       },
       'kz': {
         'register': 'Тіркелу',
@@ -270,6 +281,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         'alreadyReviewed': 'Сіз пікір қалдырдыңыз',
         'attendRequired': 'Тек қатысқандар пікір қалдыра алады',
         'ratings': 'баға',
+        'save': 'Сақтау',
+        'cancel': 'Болдырмау',
       },
       'en': {
         'register': 'Register',
@@ -291,6 +304,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         'alreadyReviewed': 'You already reviewed this event',
         'attendRequired': 'Only attendees can leave a review',
         'ratings': 'ratings',
+        'save': 'Save',
+        'cancel': 'Cancel',
       },
     }[lang]!;
 
@@ -625,10 +640,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         const SizedBox(width: 10),
                       ],
 
-                      Container(
-                        width: 48, height: 48,
-                        decoration: BoxDecoration(border: Border.all(color: AppColors.border, width: 0.5), borderRadius: BorderRadius.circular(14), color: AppColors.card),
-                        child: const Center(child: Icon(Icons.share_rounded, color: AppColors.primary, size: 20)),
+                      GestureDetector(
+                        onTap: () => _showShareSheet(context),
+                        child: Container(
+                          width: 48, height: 48,
+                          decoration: BoxDecoration(border: Border.all(color: AppColors.border, width: 0.5), borderRadius: BorderRadius.circular(14), color: AppColors.card),
+                          child: const Center(child: Icon(Icons.share_rounded, color: AppColors.primary, size: 20)),
+                        ),
                       ),
                     ],
                   ),
@@ -730,16 +748,33 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   else
                     ...(_reviews.map((r) {
                       if (r is! Map) return const SizedBox();
+                      final reviewId = (r['_id'] ?? r['id'])?.toString() ?? '';
+                      final reviewUserId = r['userId'] is Map
+                          ? (r['userId']['_id'] ?? r['userId']['id'])?.toString() ?? ''
+                          : r['userId']?.toString() ?? '';
                       final name = (r['userId'] is Map ? r['userId']['name'] : r['userId'])?.toString() ?? 'Student';
                       final rating = (r['rating'] ?? 0) as int;
                       final comment = r['comment']?.toString() ?? '';
                       final date = r['createdAt'] != null
                           ? DateFormat('dd MMM yyyy').format(DateTime.parse(r['createdAt'].toString()))
                           : '';
+
+                      final currentUserId = context.read<AppState>().user?.id ?? '';
+                      final currentRole = context.read<AppState>().user?.role ?? '';
+                      final canModify = reviewUserId == currentUserId || currentRole == 'admin';
+                      final isEditing = _editingReviewId == reviewId;
+
                       return Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border, width: 0.5)),
+                        decoration: BoxDecoration(
+                          color: AppColors.card,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isEditing ? AppColors.primary.withOpacity(0.5) : AppColors.border,
+                            width: isEditing ? 1.5 : 0.5,
+                          ),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -760,16 +795,190 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     ],
                                   ),
                                 ),
-                                Row(
-                                  children: List.generate(5, (i) => Icon(
-                                    i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                                    size: 16,
-                                    color: i < rating ? AppColors.warning : AppColors.border,
-                                  )),
-                                ),
+                                if (!isEditing)
+                                  Row(
+                                    children: List.generate(5, (i) => Icon(
+                                      i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                                      size: 16,
+                                      color: i < rating ? AppColors.warning : AppColors.border,
+                                    )),
+                                  ),
+                                if (canModify && !isEditing) ...[
+                                  const SizedBox(width: 8),
+                                  PopupMenuButton<String>(
+                                    icon: const Icon(Icons.more_vert_rounded, size: 18, color: AppColors.muted),
+                                    color: AppColors.card,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    onSelected: (value) async {
+                                      if (value == 'edit') {
+                                        setState(() {
+                                          _editingReviewId = reviewId;
+                                          _editRating = rating;
+                                          _editCommentCtrl.text = comment;
+                                        });
+                                      } else if (value == 'delete') {
+                                        final lang = context.read<AppState>().language;
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                            backgroundColor: AppColors.card,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                            title: Text(
+                                              lang == 'ru' ? 'Удалить отзыв?' : lang == 'kz' ? 'Пікірді жою?' : 'Delete review?',
+                                              style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppColors.text),
+                                            ),
+                                            content: Text(
+                                              lang == 'ru' ? 'Это действие нельзя отменить.' : lang == 'kz' ? 'Бұл әрекетті болдырмау мүмкін емес.' : 'This action cannot be undone.',
+                                              style: GoogleFonts.inter(color: AppColors.muted),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, false),
+                                                child: Text(lang == 'ru' ? 'Отмена' : lang == 'kz' ? 'Жоқ' : 'Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, true),
+                                                child: Text(lang == 'ru' ? 'Удалить' : lang == 'kz' ? 'Жою' : 'Delete',
+                                                    style: const TextStyle(color: AppColors.danger)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirm == true && mounted) {
+                                          final token = context.read<AppState>().token!;
+                                          try {
+                                            await ApiService.deleteReview(reviewId, token);
+                                            final ev = _event;
+                                            if (ev != null) {
+                                              await _loadReviews(ev.id);
+                                              context.read<AppState>().updateEventRating(ev.id, _avgRating, _totalReviews);
+                                              // Allow re-review only if it was own review
+                                              if (reviewUserId == currentUserId) {
+                                                setState(() { _alreadyReviewed = false; _canReview = true; });
+                                              }
+                                            }
+                                          } catch (e) {
+                                            if (mounted) showSnack(context, e.toString().replaceFirst('Exception: ', ''));
+                                          }
+                                        }
+                                      }
+                                    },
+                                    itemBuilder: (_) {
+                                      final lang = context.read<AppState>().language;
+                                      return [
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(children: [
+                                            const Icon(Icons.edit_rounded, size: 16, color: AppColors.primary),
+                                            const SizedBox(width: 10),
+                                            Text(lang == 'ru' ? 'Редактировать' : lang == 'kz' ? 'Өңдеу' : 'Edit',
+                                                style: GoogleFonts.inter(fontSize: 13, color: AppColors.text)),
+                                          ]),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(children: [
+                                            const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.danger),
+                                            const SizedBox(width: 10),
+                                            Text(lang == 'ru' ? 'Удалить' : lang == 'kz' ? 'Жою' : 'Delete',
+                                                style: GoogleFonts.inter(fontSize: 13, color: AppColors.danger)),
+                                          ]),
+                                        ),
+                                      ];
+                                    },
+                                  ),
+                                ],
                               ],
                             ),
-                            if (comment.isNotEmpty) ...[
+
+                            // Edit mode
+                            if (isEditing) ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(5, (i) {
+                                  final s = i + 1;
+                                  return GestureDetector(
+                                    onTap: () => setState(() => _editRating = s),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                                      child: Icon(
+                                        _editRating >= s ? Icons.star_rounded : Icons.star_outline_rounded,
+                                        size: 32,
+                                        color: _editRating >= s ? AppColors.warning : AppColors.border,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: _editCommentCtrl,
+                                maxLines: 3,
+                                style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+                                decoration: InputDecoration(
+                                  hintText: T['writeReview'],
+                                  hintStyle: GoogleFonts.inter(color: AppColors.muted),
+                                  filled: true, fillColor: AppColors.bg,
+                                  contentPadding: const EdgeInsets.all(12),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
+                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
+                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setState(() => _editingReviewId = null),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.bg,
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: AppColors.border),
+                                        ),
+                                        child: Center(child: Text(
+                                          T['cancel'] ?? 'Отмена',
+                                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted, fontWeight: FontWeight.w600),
+                                        )),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: _editRating == 0 ? null : () async {
+                                        final token = context.read<AppState>().token!;
+                                        try {
+                                          await ApiService.editReview(reviewId, _editRating, _editCommentCtrl.text.trim(), token);
+                                          final ev = _event;
+                                          if (ev != null) {
+                                            await _loadReviews(ev.id);
+                                            context.read<AppState>().updateEventRating(ev.id, _avgRating, _totalReviews);
+                                          }
+                                          if (mounted) setState(() => _editingReviewId = null);
+                                        } catch (e) {
+                                          if (mounted) showSnack(context, e.toString().replaceFirst('Exception: ', ''));
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Center(child: Text(
+                                          T['save'] ?? 'Сохранить',
+                                          style: GoogleFonts.inter(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w700),
+                                        )),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ] else if (comment.isNotEmpty) ...[
                               const SizedBox(height: 8),
                               Text(comment, style: GoogleFonts.inter(fontSize: 13, color: AppColors.text, height: 1.5)),
                             ],
@@ -788,6 +997,128 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  void _showShareSheet(BuildContext context) {
+    final event = _event;
+    if (event == null) return;
+    final eventLink = 'http://localhost:5000/events/${event.id}';
+    final encodedText = Uri.encodeComponent('Смотри это мероприятие: ${event.title}\n$eventLink');
+    final encodedTitle = Uri.encodeComponent(event.title);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Header
+            Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.share_rounded, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Поделиться', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text)),
+                    Text(event.title, style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted), overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Buttons row
+            Row(
+              children: [
+                _ShareButton(
+                  gradient: const [Color(0xFF25D366), Color(0xFF128C7E)],
+                  faIcon: FontAwesomeIcons.whatsapp,
+                  label: 'WhatsApp',
+                  onTap: () async {
+                    final url = Uri.parse('https://wa.me/?text=$encodedText');
+                    if (await canLaunchUrl(url)) launchUrl(url, mode: LaunchMode.externalApplication);
+                    if (mounted) Navigator.pop(context);
+                  },
+                ),
+                const SizedBox(width: 12),
+                _ShareButton(
+                  gradient: const [Color(0xFF2AABEE), Color(0xFF229ED9)],
+                  faIcon: FontAwesomeIcons.telegram,
+                  label: 'Telegram',
+                  onTap: () async {
+                    final url = Uri.parse('https://t.me/share/url?url=${Uri.encodeComponent(eventLink)}&text=$encodedTitle');
+                    if (await canLaunchUrl(url)) launchUrl(url, mode: LaunchMode.externalApplication);
+                    if (mounted) Navigator.pop(context);
+                  },
+                ),
+                const SizedBox(width: 12),
+                _ShareButton(
+                  gradient: const [AppColors.primary, AppColors.primaryLight],
+                  icon: Icons.copy_rounded,
+                  label: 'Копировать',
+                  onTap: () async {
+                    await Clipboard.setData(ClipboardData(text: eventLink));
+                    if (mounted) {
+                      Navigator.pop(context);
+                      showSnack(context, 'Ссылка скопирована!');
+                    }
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Link preview
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: AppColors.bg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border, width: 0.5),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.link_rounded, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      eventLink,
+                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _infoRow(IconData icon, String text, {Color starColor = AppColors.primary}) => Container(
     margin: const EdgeInsets.only(bottom: 10),
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
@@ -800,4 +1131,56 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ],
     ),
   );
+}
+
+class _ShareButton extends StatelessWidget {
+  final List<Color> gradient;
+  final IconData? icon;
+  final IconData? faIcon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ShareButton({
+    required this.gradient,
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.faIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 64, height: 64,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: gradient.first.withOpacity(0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: faIcon != null
+                  ? FaIcon(faIcon!, color: Colors.white, size: 28)
+                  : Icon(icon, color: Colors.white, size: 26),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.text)),
+        ],
+      ),
+    );
+  }
 }

@@ -20,7 +20,9 @@ dependencies:
   path_provider: ^2.1.5
   url_launcher: ^6.3.0
   http: ^1.2.0
+  font_awesome_flutter: ^10.7.0
   mobile_scanner: ^5.2.3
+  image_picker: ^1.1.2
   flutter_localizations:
     sdk: flutter
 

@@ -30,7 +30,7 @@ const eventSchema = new mongoose.Schema({
     default: false
   },
   photos: [String],
-  // ✅ новые поля для рейтинга
+
   avgRating: {
     type: Number,
     default: 0

@@ -10,9 +10,9 @@ const Map<String, Map<String, String>> errorTexts = {
     "en": "Enter password",
   },
   "invalidEmail": {
-    "ru": "Некорректный email",
-    "kz": "Email қате",
-    "en": "Invalid email",
+    "ru": "Некорректный email. Пример: name@gmail.com",
+    "kz": "Email қате. Мысалы: name@gmail.com",
+    "en": "Invalid email. Example: name@gmail.com",
   },
   "weakPassword": {
     "ru": "Пароль должен быть не менее 6 символов",
@@ -54,4 +54,3 @@ const Map<String, Map<String, String>> errorTexts = {
 String getError(String key, String lang) {
   return errorTexts[key]?[lang] ?? errorTexts[key]?['en'] ?? key;
 }
-

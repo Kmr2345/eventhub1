@@ -43,8 +43,10 @@ router.post("/", auth, async (req, res) => {
 // GET ALL EVENTS
 router.get("/", async (req, res) => {
   try {
-    const events = await Event.find().populate("organizerId", "name email");
-    res.json(events);
+    const now = new Date();
+    const upcoming = await Event.find({ eventDate: { $gte: now } }).populate("organizerId", "name email").sort({ eventDate: 1 });
+    const past = await Event.find({ eventDate: { $lt: now } }).populate("organizerId", "name email").sort({ eventDate: -1 });
+    res.json([...upcoming, ...past]);
   } catch (err) {
     res.status(500).json(err);
   }

@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -12,7 +14,8 @@ import 'package:eventhub/widgets/app_snack.dart';
 
 class CreateEventScreen extends StatefulWidget {
   final EventModel? editEvent;
-  const CreateEventScreen({super.key, this.editEvent});
+  final VoidCallback? onCreated;
+  const CreateEventScreen({super.key, this.editEvent, this.onCreated});
   @override State<CreateEventScreen> createState() => _CreateEventScreenState();
 }
 
@@ -24,6 +27,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   String _category = 'Conference';
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
+  File? _pickedImage;
+  String? _uploadedImageUrl;
+  bool _isUploading = false;
 
   static const _categories = ['Conference', 'Sports', 'Workshop', 'Art', 'Music', 'Social', 'Seminar', 'Other'];
   static const _unsplash = 'https://images.unsplash.com/photo-1613687969216-40c7b718c025?w=600&q=80';
@@ -48,6 +54,57 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     if (e != null) {
       _selectedDate = DateTime(e.eventDate.year, e.eventDate.month, e.eventDate.day);
       _selectedTime = TimeOfDay(hour: e.eventDate.hour, minute: e.eventDate.minute);
+    }
+  }
+
+  Future<void> _pickImage(AppState state) async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+              title: Text(state.language == 'ru' ? 'Галерея' : state.language == 'kz' ? 'Галерея' : 'Gallery', style: GoogleFonts.inter()),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+              title: Text(state.language == 'ru' ? 'Камера' : state.language == 'kz' ? 'Камера' : 'Camera', style: GoogleFonts.inter()),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    final picked = await picker.pickImage(source: source, imageQuality: 85, maxWidth: 1200);
+    if (picked == null) return;
+
+    setState(() {
+      _pickedImage = File(picked.path);
+      _isUploading = true;
+      _uploadedImageUrl = null;
+    });
+
+    try {
+      final url = await ApiService.uploadImage(_pickedImage!, state.token!);
+      setState(() {
+        _uploadedImageUrl = url;
+        _isUploading = false;
+      });
+    } catch (e) {
+      setState(() => _isUploading = false);
+      if (!mounted) return;
+      showSnack(context, e.toString(), isError: true);
     }
   }
 
@@ -119,7 +176,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       'locationRu': _locRu.text.trim(),
       'locationKz': _locKz.text.trim(),
       'category': _category,
-      'image': _unsplash,
+      'image': _uploadedImageUrl ?? (widget.editEvent?.image ?? _unsplash),
       'capacity': int.tryParse(_capacity.text.trim()) ?? 50,
     };
 
@@ -142,6 +199,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
         if (!mounted) return;
         showSnack(context, getMessage("eventCreated", lang));
+        widget.onCreated?.call();
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -181,21 +239,43 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Cover upload placeholder
+            // Cover upload
             GestureDetector(
-              onTap: () {},
+              onTap: () => _pickImage(state),
               child: Container(
-                height: 100,
+                height: 160,
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5, style: BorderStyle.solid),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
                   borderRadius: BorderRadius.circular(14),
                   color: AppColors.primary.withOpacity(0.04),
                 ),
-                child: Center(child: Column(
+                clipBehavior: Clip.hardEdge,
+                child: _pickedImage != null
+                    ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.file(_pickedImage!, fit: BoxFit.cover),
+                    if (_isUploading)
+                      Container(
+                        color: Colors.black45,
+                        child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+                      ),
+                    if (!_isUploading)
+                      Positioned(
+                        bottom: 8, right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                          child: Text(T['cover']!, style: GoogleFonts.inter(fontSize: 12, color: Colors.white)),
+                        ),
+                      ),
+                  ],
+                )
+                    : Center(child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_photo_alternate_rounded, color: AppColors.primary, size: 32),
-                    const SizedBox(height: 6),
+                    const Icon(Icons.add_photo_alternate_rounded, color: AppColors.primary, size: 36),
+                    const SizedBox(height: 8),
                     Text(T['cover']!, style: GoogleFonts.inter(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w500)),
                   ],
                 )),
@@ -212,7 +292,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
             // Date & Time
             Row(children: [
-              Expanded(child: _field(T['date']!, _date, '25 марта 2025', readOnly: true, onTap: () => _pickDate(lang))),
+              Expanded(child: _field(T['date']!, _date, lang == 'ru' ? '25 марта 2025' : lang == 'kz' ? '25 наурыз 2025' : '25 Mar 2025', readOnly: true, onTap: () => _pickDate(lang))),
               const SizedBox(width: 10),
               Expanded(child: _field(T['time']!, _time, '14:00', readOnly: true, onTap: () => _pickTime(lang))),
             ]),
@@ -220,9 +300,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
             // Location section
             _sectionCard(T['location']!, [
-              _field('${T['location']!} (Русский)', _locRu, 'Главный кампус, Зал 401'),
-              _field('${T['location']!} (Қазақша)', _locKz, 'Негізгі кампус, Зал 401'),
-              _field('${T['location']!} (English)', _locEn, 'Main Campus, Hall 401'),
+              _field('${T['location']!} (Русский)', _locRu, 'С 1.2.366'),
+              _field('${T['location']!} (Қазақша)', _locKz, 'С 1.2.366'),
+              _field('${T['location']!} (English)', _locEn, 'С 1.2.366'),
             ]),
 
             // Category & Capacity

@@ -7,6 +7,19 @@ import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/theme/app_theme.dart';
 import 'package:eventhub/i18n/labels.dart';
 
+String _categoryDefaultImage(String category) {
+  switch (category.toLowerCase()) {
+    case 'music':     return 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80';
+    case 'sports':    return 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&q=80';
+    case 'art':       return 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=80';
+    case 'workshop':  return 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80';
+    case 'seminar':   return 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80';
+    case 'social':    return 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80';
+    case 'conference':return 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80';
+    default:          return 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=600&q=80';
+  }
+}
+
 class EventCard extends StatelessWidget {
   final EventModel event;
   final String language;
@@ -60,7 +73,7 @@ class EventCard extends StatelessWidget {
                     Container(decoration: BoxDecoration(gradient: gradient)),
                     // Photo overlay
                     CachedNetworkImage(
-                      imageUrl: event.image,
+                      imageUrl: event.image.isNotEmpty ? event.image : _categoryDefaultImage(event.category),
                       fit: BoxFit.cover,
                       color: Colors.black.withOpacity(0.3),
                       colorBlendMode: BlendMode.multiply,
@@ -121,8 +134,8 @@ class EventCard extends StatelessWidget {
                     children: [
                       const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Text(when, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
-                      const SizedBox(width: 12),
+                      Flexible(child: Text(when, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis)),
+                      const SizedBox(width: 8),
                       const Icon(Icons.location_on_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
                       Expanded(child: Text(location, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis)),
