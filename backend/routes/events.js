@@ -61,4 +61,37 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// UPDATE EVENT
+router.put("/:id", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "organizer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only organizers and admins can edit events" });
+    }
+
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    // Только организатор-владелец или админ может редактировать
+    if (req.user.role !== "admin" && event.organizerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "You can only edit your own events" });
+    }
+
+    const allowed = [
+      "title", "titleRu", "titleKz",
+      "description", "descriptionRu", "descriptionKz",
+      "eventDate", "location", "locationRu", "locationKz",
+      "category", "image", "capacity"
+    ];
+
+    allowed.forEach(field => {
+      if (req.body[field] !== undefined) event[field] = req.body[field];
+    });
+
+    await event.save();
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

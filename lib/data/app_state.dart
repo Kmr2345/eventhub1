@@ -33,7 +33,8 @@ class AppState extends ChangeNotifier {
 
       if (savedToken != null && savedEmail != null && savedName != null && savedRole != null) {
         token = savedToken;
-        user = UserModel(name: savedName, email: savedEmail, role: savedRole);
+        final savedUserId = prefs.getString('user_id') ?? '';
+        user = UserModel(id: savedUserId, name: savedName, email: savedEmail, role: savedRole);
 
         // Reload data
         try {
@@ -63,6 +64,7 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     if (token != null) await prefs.setString('token', token!);
     if (user != null) {
+      await prefs.setString('user_id', user!.id);
       await prefs.setString('user_email', user!.email);
       await prefs.setString('user_name', user!.name);
       await prefs.setString('user_role', user!.role);
@@ -73,14 +75,15 @@ class AppState extends ChangeNotifier {
   Future<void> _clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('user_id');
     await prefs.remove('user_email');
     await prefs.remove('user_name');
     await prefs.remove('user_role');
   }
 
   // Auth
-  void login(String email, String name, String role) {
-    user = UserModel(name: name, email: email, role: role);
+  void login(String email, String name, String role, {String userId = ''}) {
+    user = UserModel(id: userId, name: name, email: email, role: role);
     _saveSession();
     notifyListeners();
   }
@@ -271,6 +274,15 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateEventRating(String eventId, double avgRating, int totalRatings) {
+    final idx = events.indexWhere((e) => e.id == eventId);
+    if (idx == -1) return;
+    events[idx].rating = avgRating;
+    events[idx].totalRatings = totalRatings;
+    notifyListeners();
+  }
+
+
   int? getUserRating(String eventId) => userRatings[eventId];
 
   // Create / Edit / Delete event
@@ -305,6 +317,6 @@ class AppState extends ChangeNotifier {
   List<EventModel> get myEvents {
     final u = user;
     if (u == null) return const [];
-    return events.where((e) => e.organizerName == u.name || e.organizerId == u.email).toList();
+    return events.where((e) => e.organizerId == u.id || e.organizerName == u.name).toList();
   }
 }

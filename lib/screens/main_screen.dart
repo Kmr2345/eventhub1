@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/app_state.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
@@ -19,6 +20,37 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  String _lastRole = '';
+
+  static const _prefKeyIndex = 'nav_tab_index';
+  static const _prefKeyRole  = 'nav_tab_role';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedIndex();
+  }
+
+  Future<void> _loadSavedIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedRole  = prefs.getString(_prefKeyRole) ?? '';
+    final savedIndex = prefs.getInt(_prefKeyIndex)   ?? 0;
+    // Если роль совпадает — восстанавливаем вкладку, иначе начинаем с 0
+    final currentRole = context.read<AppState>().user?.role ?? 'student';
+    if (mounted) {
+      setState(() {
+        _lastRole     = currentRole;
+        _currentIndex = (savedRole == currentRole) ? savedIndex : 0;
+      });
+    }
+  }
+
+  Future<void> _setIndex(int i) async {
+    setState(() => _currentIndex = i);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefKeyIndex, i);
+    await prefs.setString(_prefKeyRole, _lastRole);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +58,17 @@ class _MainScreenState extends State<MainScreen> {
     final role = state.user?.role ?? 'student';
     final isOrganizer = role == 'organizer';
     final isAdmin = role == 'admin';
+
+    // Сбрасываем индекс только при смене роли
+    if (_lastRole != role) {
+      _lastRole = role;
+      _currentIndex = 0;
+      // Сохраняем сброс асинхронно
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setInt(_prefKeyIndex, 0);
+        prefs.setString(_prefKeyRole, role);
+      });
+    }
 
     final studentTabs = [
       const HomeScreen(),
@@ -58,13 +101,13 @@ class _MainScreenState extends State<MainScreen> {
       tabs = studentTabs;
     }
 
-    final safeIndex = _currentIndex.clamp(0, tabs.length - 1);
+    final currentIndex = _currentIndex.clamp(0, tabs.length - 1);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: _buildAppBar(context, state, isOrganizer, isAdmin),
-      body: IndexedStack(index: safeIndex, children: tabs),
-      bottomNavigationBar: _buildBottomNav(state, isOrganizer, isAdmin),
+      body: IndexedStack(index: currentIndex, children: tabs),
+      bottomNavigationBar: _buildBottomNav(state, isOrganizer, isAdmin, currentIndex),
     );
   }
 
@@ -189,7 +232,7 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget _buildBottomNav(AppState state, bool isOrganizer, bool isAdmin) {
+  Widget _buildBottomNav(AppState state, bool isOrganizer, bool isAdmin, int currentIndex) {
     final lang = state.language;
 
     List<Map<String, dynamic>> items;
@@ -248,12 +291,12 @@ class _MainScreenState extends State<MainScreen> {
           child: Row(
             children: List.generate(items.length, (i) {
               final item = items[i];
-              final active = _currentIndex == i;
+              final active = currentIndex == i;
               final isCreate = (item['activeIcon'] as IconData) == Icons.add_circle_rounded;
 
               return Expanded(
                 child: GestureDetector(
-                  onTap: () => setState(() => _currentIndex = i),
+                  onTap: () => _setIndex(i),
                   behavior: HitTestBehavior.opaque,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

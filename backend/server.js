@@ -34,6 +34,9 @@ app.use("/notifications", notificationRoutes);
 const adminRoutes = require("./routes/admin");
 app.use("/admin", adminRoutes);
 
+const reviewRoutes = require("./routes/reviews");
+app.use("/reviews", reviewRoutes);
+
 // Reminder cron (1 day before)
 cron.schedule("0 * * * *", async () => {
   try {

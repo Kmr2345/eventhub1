@@ -232,6 +232,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 user['email'] as String,
                                 user['name'] as String,
                                 user['role'] as String,
+                                userId: (user['_id'] ?? user['id'] ?? '').toString(),
                               );
                               await state.refreshMyRegistrations();
                               final events = await ApiService.getEvents(token);

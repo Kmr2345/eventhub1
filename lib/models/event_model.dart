@@ -52,9 +52,8 @@ class EventModel {
       if (v is DateTime) return v;
       if (v is String && v.isNotEmpty) {
         final parsed = DateTime.tryParse(v);
-        if (parsed != null) return parsed;
+        if (parsed != null) return parsed.toLocal();
       }
-      // Fallback for older payloads that used date/time strings
       final d = json['date'];
       final t = json['time'];
       if (d is String && t is String && d.isNotEmpty && t.isNotEmpty) {
@@ -89,8 +88,8 @@ class EventModel {
       registered: _int(json['registeredCount'] ?? json['registered'], 0),
       organizerId: _str(orgId, ''),
       organizerName: _str(orgName, ''),
-      rating: _double(json['rating'], 0),
-      totalRatings: _int(json['totalRatings'] ?? json['total_ratings'], 0),
+      rating: _double(json['avgRating'] ?? json['rating'], 0),
+      totalRatings: _int(json['reviewCount'] ?? json['totalRatings'] ?? json['total_ratings'], 0),
       isFavorite: _bool(json['isFavorite'] ?? json['is_favorite'], false),
     );
   }
@@ -100,7 +99,7 @@ class EventModel {
   String getDescription(String lang) => lang == 'ru' ? descriptionRu : lang == 'kz' ? descriptionKz : description;
 
   int get spotsLeft => capacity - registered;
-  double get fillPercent => registered / capacity;
+  double get fillPercent => capacity > 0 ? registered / capacity : 0;
 
   EventModel copyWith({
     String? title, String? titleRu, String? titleKz,
@@ -133,11 +132,12 @@ class EventModel {
 }
 
 class UserModel {
+  final String id;
   final String name;
   final String email;
-  final String role; // 'student' | 'organizer'
+  final String role;
 
-  const UserModel({required this.name, required this.email, required this.role});
+  const UserModel({required this.id, required this.name, required this.email, required this.role});
 
   String get initials {
     final parts = name.split(' ');

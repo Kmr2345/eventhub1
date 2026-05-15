@@ -98,8 +98,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         lang == 'ru'
             ? 'Выберите дату и время'
             : lang == 'kz'
-                ? 'Күні мен уақытын таңдаңыз'
-                : 'Select date and time',
+            ? 'Күні мен уақытын таңдаңыз'
+            : 'Select date and time',
         isError: true,
       );
       return;
@@ -124,13 +124,26 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     };
 
     try {
-      final created = await ApiService.createEvent(data, token);
-      final model = EventModel.fromJson(created);
-      state.addEvent(model);
+      final editId = widget.editEvent?.id;
+      if (editId != null && editId.isNotEmpty) {
+        // ── Режим редактирования ──
+        final updated = await ApiService.updateEvent(editId, data, token);
+        final model = EventModel.fromJson(updated);
+        state.updateEvent(model);
 
-      if (!mounted) return;
-      showSnack(context, getMessage("eventCreated", lang));
-      Navigator.pop(context);
+        if (!mounted) return;
+        showSnack(context, lang == 'ru' ? 'Мероприятие обновлено' : lang == 'kz' ? 'Іс-шара жаңартылды' : 'Event updated');
+        Navigator.pop(context, true); // true → event_detail_screen перезагружает данные
+      } else {
+        // ── Режим создания ──
+        final created = await ApiService.createEvent(data, token);
+        final model = EventModel.fromJson(created);
+        state.addEvent(model);
+
+        if (!mounted) return;
+        showSnack(context, getMessage("eventCreated", lang));
+        Navigator.pop(context, true);
+      }
     } catch (e) {
       print('ERROR: ${e.toString()}');
       if (!mounted) return;
@@ -286,14 +299,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   );
 
   Widget _field(
-    String label,
-    TextEditingController ctrl,
-    String hint, {
-    int maxLines = 1,
-    TextInputType inputType = TextInputType.text,
-    bool readOnly = false,
-    VoidCallback? onTap,
-  }) => Padding(
+      String label,
+      TextEditingController ctrl,
+      String hint, {
+        int maxLines = 1,
+        TextInputType inputType = TextInputType.text,
+        bool readOnly = false,
+        VoidCallback? onTap,
+      }) => Padding(
     padding: const EdgeInsets.only(bottom: 10),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -103,7 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (_, i) {
                 final e = trending[i];
                 return GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => EventDetailScreen(event: e)),
+                    );
+                    loadEvents(); // ✅ рефреш после возврата
+                  },
                   child: Container(
                     width: 150,
                     margin: const EdgeInsets.only(right: 10),
@@ -153,14 +159,20 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         SliverList(
           delegate: SliverChildBuilderDelegate(
-            (_, i) {
+                (_, i) {
               final e = upcoming[i];
               return EventCard(
                 event: e,
                 language: lang,
                 isFavorite: state.isFavoriteEvent(e.id),
                 isRegistered: state.isRegistered(e.id),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => EventDetailScreen(event: e)),
+                  );
+                  loadEvents(); // ✅ рефреш после возврата
+                },
                 onFavorite: () {
                   final wasFav = state.isFavoriteEvent(e.id);
                   state.syncToggleFavorite(e.id);

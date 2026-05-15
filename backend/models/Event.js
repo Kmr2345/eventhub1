@@ -5,10 +5,17 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  titleRu: String,
+  titleKz: String,
   description: String,
+  descriptionRu: String,
+  descriptionKz: String,
   eventDate: Date,
   location: String,
+  locationRu: String,
+  locationKz: String,
   category: String,
+  image: String,
   capacity: Number,
   registeredCount: {
     type: Number,
@@ -22,7 +29,16 @@ const eventSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  photos: [String]
+  photos: [String],
+  // ✅ новые поля для рейтинга
+  avgRating: {
+    type: Number,
+    default: 0
+  },
+  reviewCount: {
+    type: Number,
+    default: 0
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Event", eventSchema);

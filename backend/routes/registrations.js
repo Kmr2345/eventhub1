@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const Registration = require("../models/Registration");
 const Event = require("../models/Event");
 const auth = require("../middleware/auth");
+const createNotification = require("../utils/createNotification");
 
 // REGISTER TO EVENT
 router.post("/", auth, async (req, res) => {
@@ -21,6 +22,14 @@ router.post("/", auth, async (req, res) => {
 
     const eventObjectId = new mongoose.Types.ObjectId(eventId);
 
+    // Нельзя регистрироваться после даты события
+    const event = await Event.findById(eventObjectId);
+    if (!event) return res.status(404).json("Event not found");
+
+    if (event.eventDate && new Date(event.eventDate) < new Date()) {
+      return res.status(400).json("Registration is closed — event has already passed");
+    }
+
     let registration = await Registration.findOne({
       userId: req.user.id,
       eventId: eventObjectId
@@ -28,7 +37,6 @@ router.post("/", auth, async (req, res) => {
 
     console.log("FOUND:", registration);
 
-    // CASE 1: if exists AND cancelled → reuse
     if (registration && registration.status === "cancelled") {
       registration.status = "registered";
       await registration.save();
@@ -36,12 +44,10 @@ router.post("/", auth, async (req, res) => {
       return res.json(registration);
     }
 
-    // CASE 2: if exists AND active → block
     if (registration && ["registered", "confirmed"].includes(registration.status)) {
       return res.status(400).json("Already registered");
     }
 
-    // CASE 3: create new
     registration = new Registration({
       userId: req.user.id,
       eventId: eventObjectId,
@@ -96,15 +102,25 @@ router.put("/:id/cancel", auth, async (req, res) => {
   }
 });
 
-// MARK AS ATTENDED (только organizer)
-// СТАЛО:
+// MARK AS ATTENDED (organizer/admin)
 router.put("/:id/attended", auth, async (req, res) => {
   try {
-    const registration = await Registration.findById(req.params.id);
+    const registration = await Registration.findById(req.params.id).populate("eventId");
     if (!registration) return res.status(404).json("Registration not found");
-    if (req.user.role !== "organizer") return res.status(403).json("Only organizer can mark attendance");
+    if (!["organizer", "admin"].includes(req.user.role)) {
+      return res.status(403).json("Only organizer or admin can mark attendance");
+    }
 
-    // Уже отсканирован
+    // Сканирование только в день события или после
+    const event = registration.eventId;
+    if (event && event.eventDate) {
+      const eventDay = new Date(event.eventDate);
+      eventDay.setHours(0, 0, 0, 0);
+      if (new Date() < eventDay) {
+        return res.status(400).json("Cannot mark attendance before event day");
+      }
+    }
+
     if (registration.status === "attended") {
       return res.status(409).json("Already attended");
     }
@@ -115,6 +131,21 @@ router.put("/:id/attended", auth, async (req, res) => {
 
     registration.status = "attended";
     await registration.save();
+
+    // Уведомление студенту — оцените мероприятие
+    try {
+      const eventTitle = event?.title ?? "мероприятие";
+      const eventId = event?._id ?? registration.eventId;
+      await createNotification(
+        registration.userId,
+        "Оцените мероприятие",
+        `Вы посетили «${eventTitle}». Оставьте оценку и отзыв!`,
+        { type: "reviewRequest", eventId: eventId.toString() }
+      );
+    } catch (notifyErr) {
+      console.log("NOTIFY ERROR:", notifyErr?.message ?? notifyErr);
+    }
+
     res.json(registration);
   } catch (err) {
     res.status(500).json(err);
