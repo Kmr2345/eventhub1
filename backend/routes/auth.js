@@ -4,6 +4,8 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendVerificationEmail = require("../utils/sendEmail");
+const createNotification = require("../utils/createNotification");
+const User = require("../models/User");
 
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -105,6 +107,21 @@ router.post("/verify", async (req, res) => {
     delete userObj.password;
     delete userObj.verifyCode;
     delete userObj.verifyCodeExpires;
+
+    // Уведомляем всех админов о новом пользователе
+    try {
+      const admins = await User.find({ role: "admin" }).select("_id");
+      for (const admin of admins) {
+        await createNotification(
+          admin._id,
+          "Новый пользователь",
+          `${user.name} зарегистрировался на платформе`,
+          { type: "newUser", userId: user._id.toString() }
+        );
+      }
+    } catch (notifyErr) {
+      console.log("NOTIFY ADMIN ERROR:", notifyErr?.message ?? notifyErr);
+    }
 
     res.json({ token, user: userObj });
   } catch (err) {

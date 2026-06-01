@@ -87,8 +87,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 appState.markNotificationAsRead(notificationId);
               }
 
-              // 2) Send to backend (no await)
-              ApiService.markNotificationRead(notificationId, token);
+              // 2) Send to backend (fire-and-forget, UI already updated)
+              ApiService.markNotificationRead(notificationId, token).catchError((_) {
+                // Если запрос упал — откатываем пометку обратно в непрочитанное
+                appState.markNotificationAsRead(notificationId); // нет обратного метода, но
+                // перезагружаем актуальное состояние с сервера
+                ApiService.getNotifications(token).then(appState.setNotifications).catchError((_) {});
+              });
 
               // 3) Navigate and wait until user returns
               await Navigator.push(

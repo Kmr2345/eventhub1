@@ -15,7 +15,8 @@ import 'admin_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
-  @override State<MainScreen> createState() => _MainScreenState();
+  @override
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
@@ -23,7 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   String _lastRole = '';
 
   static const _prefKeyIndex = 'nav_tab_index';
-  static const _prefKeyRole  = 'nav_tab_role';
+  static const _prefKeyRole = 'nav_tab_role';
 
   @override
   void initState() {
@@ -31,15 +32,32 @@ class _MainScreenState extends State<MainScreen> {
     _loadSavedIndex();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Сброс вкладки при смене роли — здесь, а не в build().
+    // didChangeDependencies вызывается после изменения InheritedWidget (Provider),
+    // поэтому setState() внутри безопасен.
+    final currentRole = context.read<AppState>().user?.role ?? 'student';
+    if (_lastRole.isNotEmpty && _lastRole != currentRole) {
+      _lastRole = currentRole;
+      setState(() => _currentIndex = 0);
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setInt(_prefKeyIndex, 0);
+        prefs.setString(_prefKeyRole, currentRole);
+      });
+    }
+  }
+
   Future<void> _loadSavedIndex() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedRole  = prefs.getString(_prefKeyRole) ?? '';
-    final savedIndex = prefs.getInt(_prefKeyIndex)   ?? 0;
-    // Если роль совпадает — восстанавливаем вкладку, иначе начинаем с 0
-    final currentRole = context.read<AppState>().user?.role ?? 'student';
+    final savedRole = prefs.getString(_prefKeyRole) ?? '';
+    final savedIndex = prefs.getInt(_prefKeyIndex) ?? 0;
+    final currentRole =
+        context.read<AppState>().user?.role ?? 'student';
     if (mounted) {
       setState(() {
-        _lastRole     = currentRole;
+        _lastRole = currentRole;
         _currentIndex = (savedRole == currentRole) ? savedIndex : 0;
       });
     }
@@ -59,17 +77,6 @@ class _MainScreenState extends State<MainScreen> {
     final isOrganizer = role == 'organizer';
     final isAdmin = role == 'admin';
 
-    // Сбрасываем индекс только при смене роли
-    if (_lastRole != role) {
-      _lastRole = role;
-      _currentIndex = 0;
-      // Сохраняем сброс асинхронно
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.setInt(_prefKeyIndex, 0);
-        prefs.setString(_prefKeyRole, role);
-      });
-    }
-
     final studentTabs = [
       const HomeScreen(),
       const SearchScreen(),
@@ -88,18 +95,14 @@ class _MainScreenState extends State<MainScreen> {
     final adminTabs = [
       const HomeScreen(),
       const AdminScreen(),
-      CreateEventScreen(onCreated: () => _setIndex(0)),
       const ProfileScreen(),
     ];
 
-    List<Widget> tabs;
-    if (isAdmin) {
-      tabs = adminTabs;
-    } else if (isOrganizer) {
-      tabs = organizerTabs;
-    } else {
-      tabs = studentTabs;
-    }
+    final tabs = isAdmin
+        ? adminTabs
+        : isOrganizer
+        ? organizerTabs
+        : studentTabs;
 
     final currentIndex = _currentIndex.clamp(0, tabs.length - 1);
 
@@ -107,12 +110,13 @@ class _MainScreenState extends State<MainScreen> {
       backgroundColor: AppColors.bg,
       appBar: _buildAppBar(context, state, isOrganizer, isAdmin),
       body: IndexedStack(index: currentIndex, children: tabs),
-      bottomNavigationBar: _buildBottomNav(state, isOrganizer, isAdmin, currentIndex),
+      bottomNavigationBar:
+      _buildBottomNav(state, isOrganizer, isAdmin, currentIndex),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, AppState state,
-      bool isOrganizer, bool isAdmin) {
+  PreferredSizeWidget _buildAppBar(
+      BuildContext context, AppState state, bool isOrganizer, bool isAdmin) {
     final unreadCount = state.notifications.where((n) {
       if (n is! Map) return false;
       final v = n['read'] ?? n['isRead'];
@@ -149,7 +153,8 @@ class _MainScreenState extends State<MainScreen> {
                   if (isAdmin) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(6),
@@ -181,7 +186,8 @@ class _MainScreenState extends State<MainScreen> {
                 onTap: () => state.setLanguage(l),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: active ? AppColors.primary : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
@@ -199,13 +205,17 @@ class _MainScreenState extends State<MainScreen> {
         Stack(
           children: [
             IconButton(
-              icon: const Icon(Icons.notifications_outlined, color: AppColors.primary),
-              onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+              icon: const Icon(Icons.notifications_outlined,
+                  color: AppColors.primary),
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen())),
             ),
             if (unreadCount > 0)
               Positioned(
-                top: 8, right: 8,
+                top: 8,
+                right: 8,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   height: 16,
@@ -213,7 +223,8 @@ class _MainScreenState extends State<MainScreen> {
                   decoration: BoxDecoration(
                       color: AppColors.danger,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white, width: 1.5)),
+                      border:
+                      Border.all(color: Colors.white, width: 1.5)),
                   child: Center(
                     child: Text(
                       unreadCount > 9 ? '9+' : unreadCount.toString(),
@@ -232,7 +243,8 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget _buildBottomNav(AppState state, bool isOrganizer, bool isAdmin, int currentIndex) {
+  Widget _buildBottomNav(
+      AppState state, bool isOrganizer, bool isAdmin, int currentIndex) {
     final lang = state.language;
 
     List<Map<String, dynamic>> items;
@@ -241,10 +253,9 @@ class _MainScreenState extends State<MainScreen> {
       items = [
         _navItem(Icons.home_rounded, Icons.home_outlined,
             lang == 'ru' ? 'Главная' : lang == 'kz' ? 'Басты' : 'Home'),
-        _navItem(Icons.admin_panel_settings_rounded, Icons.admin_panel_settings_outlined,
+        _navItem(Icons.admin_panel_settings_rounded,
+            Icons.admin_panel_settings_outlined,
             lang == 'ru' ? 'Админ' : lang == 'kz' ? 'Админ' : 'Admin'),
-        _navItem(Icons.add_circle_rounded, Icons.add_circle_outline_rounded,
-            lang == 'ru' ? 'Создать' : lang == 'kz' ? 'Жасау' : 'Create'),
         _navItem(Icons.person_rounded, Icons.person_outline_rounded,
             lang == 'ru' ? 'Профиль' : lang == 'kz' ? 'Профиль' : 'Profile'),
       ];
@@ -292,7 +303,8 @@ class _MainScreenState extends State<MainScreen> {
             children: List.generate(items.length, (i) {
               final item = items[i];
               final active = currentIndex == i;
-              final isCreate = (item['activeIcon'] as IconData) == Icons.add_circle_rounded;
+              final isCreate =
+                  (item['activeIcon'] as IconData) == Icons.add_circle_rounded;
 
               return Expanded(
                 child: GestureDetector(
@@ -311,24 +323,27 @@ class _MainScreenState extends State<MainScreen> {
                               : AppColors.primary.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
-                          Icons.add_rounded,
-                          size: 22,
-                          color: active ? Colors.white : AppColors.primary,
-                        ),
+                        child: Icon(Icons.add_rounded,
+                            size: 22,
+                            color: active
+                                ? Colors.white
+                                : AppColors.primary),
                       )
                           : Icon(
                           active
                               ? item['activeIcon'] as IconData
                               : item['icon'] as IconData,
                           size: 24,
-                          color: active ? AppColors.primary : AppColors.muted),
+                          color:
+                          active ? AppColors.primary : AppColors.muted),
                       const SizedBox(height: 3),
                       Text(item['label'] as String,
                           style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: active ? AppColors.primary : AppColors.muted)),
+                              color: active
+                                  ? AppColors.primary
+                                  : AppColors.muted)),
                     ],
                   ),
                 ),
@@ -340,6 +355,7 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Map<String, dynamic> _navItem(IconData activeIcon, IconData icon, String label) =>
+  Map<String, dynamic> _navItem(
+      IconData activeIcon, IconData icon, String label) =>
       {'activeIcon': activeIcon, 'icon': icon, 'label': label};
 }

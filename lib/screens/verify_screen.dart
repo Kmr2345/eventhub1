@@ -8,6 +8,7 @@ import '../models/event_model.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_snack.dart';
+import 'main_screen.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String email;
@@ -86,6 +87,13 @@ class _VerifyScreenState extends State<VerifyScreen> {
       final favs = await ApiService.getFavorites(token);
       state.setFavorites(favs);
       await state.refreshNotifications();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+              (route) => false,
+        );
+      }
     } catch (e) {
       if (mounted) {
         showSnack(context, e.toString().replaceFirst('Exception: ', ''));

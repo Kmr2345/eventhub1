@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Event = require("../models/Event");
 const User = require("../models/User");
+const Registration = require("../models/Registration");
 const auth = require("../middleware/auth");
 const createNotification = require("../utils/createNotification");
 
@@ -91,6 +92,48 @@ router.put("/:id", auth, async (req, res) => {
 
     await event.save();
     res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE EVENT (organizer-owner or admin)
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "organizer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only organizers and admins can delete events" });
+    }
+
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    // Организатор может удалять только свои события
+    if (req.user.role !== "admin" && event.organizerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "You can only delete your own events" });
+    }
+
+    // Уведомляем зарегистрированных студентов об отмене события
+    try {
+      const regs = await Registration.find({
+        eventId: req.params.id,
+        status: { $in: ["registered", "confirmed"] }
+      }).select("userId");
+      for (const r of regs) {
+        await createNotification(
+          r.userId,
+          "Мероприятие отменено",
+          `«${event.title}» было отменено организатором`,
+          { type: "eventCancelled", eventId: req.params.id }
+        );
+      }
+    } catch (notifyErr) {
+      console.log("NOTIFY ERROR:", notifyErr?.message ?? notifyErr);
+    }
+
+    await Event.findByIdAndDelete(req.params.id);
+    await Registration.deleteMany({ eventId: req.params.id });
+
+    res.json({ message: "Event deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

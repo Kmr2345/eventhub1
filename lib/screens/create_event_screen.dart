@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,7 +11,9 @@ import 'package:eventhub/models/event_model.dart';
 import 'package:eventhub/localization/messages.dart';
 import 'package:eventhub/services/api_service.dart';
 import 'package:eventhub/theme/app_theme.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eventhub/widgets/app_snack.dart';
+import 'package:eventhub/screens/event_detail_screen.dart';
 
 class CreateEventScreen extends StatefulWidget {
   final EventModel? editEvent;
@@ -27,7 +30,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   String _category = 'Conference';
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  File? _pickedImage;
+  XFile? _pickedImage;
   String? _uploadedImageUrl;
   bool _isUploading = false;
 
@@ -74,11 +77,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               title: Text(state.language == 'ru' ? 'Галерея' : state.language == 'kz' ? 'Галерея' : 'Gallery', style: GoogleFonts.inter()),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
-              title: Text(state.language == 'ru' ? 'Камера' : state.language == 'kz' ? 'Камера' : 'Camera', style: GoogleFonts.inter()),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -90,7 +88,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     if (picked == null) return;
 
     setState(() {
-      _pickedImage = File(picked.path);
+      _pickedImage = picked;
       _isUploading = true;
       _uploadedImageUrl = null;
     });
@@ -183,16 +181,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     try {
       final editId = widget.editEvent?.id;
       if (editId != null && editId.isNotEmpty) {
-        // ── Режим редактирования ──
         final updated = await ApiService.updateEvent(editId, data, token);
         final model = EventModel.fromJson(updated);
         state.updateEvent(model);
 
         if (!mounted) return;
         showSnack(context, lang == 'ru' ? 'Мероприятие обновлено' : lang == 'kz' ? 'Іс-шара жаңартылды' : 'Event updated');
-        Navigator.pop(context, true); // true → event_detail_screen перезагружает данные
+        Navigator.pop(context, true);
       } else {
-        // ── Режим создания ──
         final created = await ApiService.createEvent(data, token);
         final model = EventModel.fromJson(created);
         state.addEvent(model);
@@ -200,7 +196,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         if (!mounted) return;
         showSnack(context, getMessage("eventCreated", lang));
         widget.onCreated?.call();
-        Navigator.pop(context, true);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => EventDetailScreen(event: model)),
+        );
       }
     } catch (e) {
       print('ERROR: ${e.toString()}');
@@ -239,7 +238,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Cover upload
             GestureDetector(
               onTap: () => _pickImage(state),
               child: Container(
@@ -254,13 +252,24 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ? Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.file(_pickedImage!, fit: BoxFit.cover),
+                    kIsWeb
+                        ? FutureBuilder<Uint8List>(
+                      future: _pickedImage!.readAsBytes(),
+                      builder: (_, snap) => snap.hasData
+                          ? Image.memory(snap.data!, fit: BoxFit.cover)
+                          : const Center(child: CircularProgressIndicator()),
+                    )
+                        : Image.network(
+                      Uri.file(_pickedImage!.path).toString(),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.white),
+                    ),
                     if (_isUploading)
                       Container(
                         color: Colors.black45,
                         child: const Center(child: CircularProgressIndicator(color: Colors.white)),
                       ),
-                    if (!_isUploading)
+                    if (!_isUploading) ...[
                       Positioned(
                         bottom: 8, right: 8,
                         child: Container(
@@ -269,6 +278,53 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           child: Text(T['cover']!, style: GoogleFonts.inter(fontSize: 12, color: Colors.white)),
                         ),
                       ),
+                      Positioned(
+                        top: 8, right: 8,
+                        child: GestureDetector(
+                          onTap: () => setState(() {
+                            _pickedImage = null;
+                            _uploadedImageUrl = null;
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                            child: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                )
+                    : widget.editEvent?.image != null && (widget.editEvent?.image ?? '').isNotEmpty
+                    ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: widget.editEvent!.image,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => const SizedBox(),
+                    ),
+                    Positioned(
+                      bottom: 8, right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                        child: Text(T['cover']!, style: GoogleFonts.inter(fontSize: 12, color: Colors.white)),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8, right: 8,
+                      child: GestureDetector(
+                        onTap: () => setState(() {
+                          _uploadedImageUrl = '';
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                          child: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                        ),
+                      ),
+                    ),
                   ],
                 )
                     : Center(child: Column(
@@ -283,14 +339,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Title section
             _sectionCard(T['name']!, [
               _field('${T['name']!} (Русский)', _titleRu, 'Название на русском'),
               _field('${T['name']!} (Қазақша)', _titleKz, 'Атауы қазақша'),
               _field('${T['name']!} (English)', _titleEn, 'Title in English'),
             ]),
 
-            // Date & Time
             Row(children: [
               Expanded(child: _field(T['date']!, _date, lang == 'ru' ? '25 марта 2025' : lang == 'kz' ? '25 наурыз 2025' : '25 Mar 2025', readOnly: true, onTap: () => _pickDate(lang))),
               const SizedBox(width: 10),
@@ -298,14 +352,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             ]),
             const SizedBox(height: 14),
 
-            // Location section
             _sectionCard(T['location']!, [
               _field('${T['location']!} (Русский)', _locRu, 'С 1.2.366'),
               _field('${T['location']!} (Қазақша)', _locKz, 'С 1.2.366'),
               _field('${T['location']!} (English)', _locEn, 'С 1.2.366'),
             ]),
 
-            // Category & Capacity
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -337,7 +389,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Description section
             _sectionCard(T['desc']!, [
               _field('${T['desc']!} (Русский)', _descRu, 'Описание на русском...', maxLines: 3),
               _field('${T['desc']!} (Қазақша)', _descKz, 'Сипаттама...', maxLines: 2),
@@ -346,7 +397,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
             const SizedBox(height: 8),
 
-            // Submit button
             GestureDetector(
               onTap: () async => _submit(state, lang),
               child: Container(

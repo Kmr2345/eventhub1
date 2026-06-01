@@ -46,6 +46,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   final _commentCtrl = TextEditingController();
   bool _submittingReview = false;
 
+  // БАГ #10 ИСПРАВЛЕН: защита от двойного нажатия на кнопку регистрации/отмены
+  bool _isActionLoading = false;
+
   // Review editing
   String? _editingReviewId;
   int _editRating = 0;
@@ -536,13 +539,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           Expanded(
                             flex: 3,
                             child: GestureDetector(
-                              onTap: isFull ? null : () async {
+                              // БАГ #10 ИСПРАВЛЕН: блокируем кнопку во время выполнения запроса,
+                              // чтобы исключить двойную регистрацию при быстрых нажатиях.
+                              onTap: (isFull || _isActionLoading) ? null : () async {
                                 final token = context.read<AppState>().token;
                                 if (token == null || token.isEmpty) {
                                   if (!mounted) return;
                                   showSnack(context, getMessage("loginFirst", lang), isError: true);
                                   return;
                                 }
+                                setState(() => _isActionLoading = true);
                                 try {
                                   if (!isReg) {
                                     await ApiService.registerToEvent(e.id, token);
@@ -560,6 +566,34 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       showSnack(context, getMessage("registrationNotFound", lang), isError: true);
                                       return;
                                     }
+                                    if (!mounted) return;
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                        title: Text(
+                                          lang == 'ru' ? 'Отменить регистрацию?' : lang == 'kz' ? 'Тіркелуді болдырмау?' : 'Cancel Registration?',
+                                          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16),
+                                        ),
+                                        content: Text(
+                                          lang == 'ru' ? 'Вы уверены, что хотите отменить регистрацию?' : lang == 'kz' ? 'Бұл іс-шарадан тіркелуді болдырмағыңызға сенімдісіз бе?' : 'Are you sure you want to cancel your registration?',
+                                          style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, false),
+                                            child: Text(lang == 'ru' ? 'Нет' : lang == 'kz' ? 'Жоқ' : 'No',
+                                                style: GoogleFonts.inter(color: AppColors.muted, fontWeight: FontWeight.w600)),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            child: Text(lang == 'ru' ? 'Да, отменить' : lang == 'kz' ? 'Иә, болдырмау' : 'Yes, cancel',
+                                                style: GoogleFonts.inter(color: Colors.red, fontWeight: FontWeight.w700)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmed != true) return;
                                     await ApiService.cancelRegistration(registrationId, token);
                                     setState(() { _isRegistered = false; e.registered -= 1; });
                                     await _loadRegistrationFor(e.id);
@@ -571,18 +605,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 } catch (err) {
                                   if (!mounted) return;
                                   showSnack(context, err.toString(), isError: true);
+                                } finally {
+                                  if (mounted) setState(() => _isActionLoading = false);
                                 }
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 15),
                                 decoration: BoxDecoration(
-                                  gradient: isFull ? null : (isReg ? null : const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight])),
-                                  color: isFull ? Colors.grey.shade200 : (isReg ? Colors.white : null),
+                                  gradient: (isFull || _isActionLoading) ? null : (isReg ? null : const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight])),
+                                  color: (isFull || _isActionLoading) ? Colors.grey.shade200 : (isReg ? Colors.white : null),
                                   borderRadius: BorderRadius.circular(14),
-                                  border: isReg ? Border.all(color: AppColors.primary, width: 1.5) : null,
+                                  border: isReg && !_isActionLoading ? Border.all(color: AppColors.primary, width: 1.5) : null,
                                 ),
                                 child: Center(
-                                  child: Text(
+                                  child: _isActionLoading
+                                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                      : Text(
                                     isFull ? T['full']! : (isReg ? T['unregister']! : T['register']!),
                                     style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: isFull ? AppColors.muted : (isReg ? AppColors.primary : Colors.white)),
                                   ),
@@ -604,41 +642,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         const SizedBox(width: 10),
                       ],
 
-                      if (canEdit) ...[
-                        Expanded(
-                          flex: 3,
-                          child: GestureDetector(
-                            onTap: () async {
-                              final updated = await Navigator.push<bool>(
-                                context,
-                                MaterialPageRoute(builder: (_) => CreateEventScreen(editEvent: e)),
-                              );
-                              if (updated == true && mounted) {
-                                setState(() { _loaded = null; });
-                                _loadIfNeeded();
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 15),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Center(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
-                                    const SizedBox(width: 8),
-                                    Text(T['edit']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                      ],
+                      // БАГ #9 ИСПРАВЛЕН: Edit-кнопка убрана из тела.
+                      // Редактирование доступно через иконку-карандаш в AppBar.
 
                       GestureDetector(
                         onTap: () => _showShareSheet(context),
@@ -1000,7 +1005,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   void _showShareSheet(BuildContext context) {
     final event = _event;
     if (event == null) return;
-    final eventLink = 'http://localhost:5000/events/${event.id}';
+    // shareBaseUrl — реальный IP сервера, ссылка откроется у получателя в WhatsApp/Telegram
+    final eventLink = '${ApiService.shareBaseUrl}/events/${event.id}';
     final encodedText = Uri.encodeComponent('Смотри это мероприятие: ${event.title}\n$eventLink');
     final encodedTitle = Uri.encodeComponent(event.title);
 

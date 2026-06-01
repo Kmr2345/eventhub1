@@ -20,13 +20,18 @@ class OrganizerScreen extends StatelessWidget {
     final lang = state.language;
     final events = state.myEvents;
 
-    final totalParticipants =
-    events.fold(0, (s, e) => s + e.registered);
+    final totalParticipants = events.fold(0, (s, e) => s + e.registered);
 
-    final avgRating = events.isEmpty
+    // Взвешенное среднее: учитываем количество отзывов у каждого события.
+    // Ивенты без отзывов не влияют на итоговый рейтинг.
+    final ratedEvents = events.where((e) => e.totalRatings > 0).toList();
+    final totalRatingsCount =
+    ratedEvents.fold(0, (s, e) => s + e.totalRatings);
+    final weightedAvgRating = totalRatingsCount == 0
         ? 0.0
-        : events.fold(0.0, (s, e) => s + e.rating) /
-        events.length;
+        : ratedEvents.fold(
+        0.0, (s, e) => s + e.rating * e.totalRatings) /
+        totalRatingsCount;
 
     final T = {
       'ru': {
@@ -74,12 +79,7 @@ class OrganizerScreen extends StatelessWidget {
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
-              8,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               T['title']!,
               style: GoogleFonts.inter(
@@ -93,38 +93,17 @@ class OrganizerScreen extends StatelessWidget {
 
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              0,
-              16,
-              16,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Row(
               children: [
-                _statCard(
-                  events.length.toString(),
-                  T['events']!,
-                  Icons.event_rounded,
-                  AppColors.primary,
-                ),
-
+                _statCard(events.length.toString(), T['events']!,
+                    Icons.event_rounded, AppColors.primary),
                 const SizedBox(width: 10),
-
-                _statCard(
-                  totalParticipants.toString(),
-                  T['participants']!,
-                  Icons.people_rounded,
-                  AppColors.secondary,
-                ),
-
+                _statCard(totalParticipants.toString(), T['participants']!,
+                    Icons.people_rounded, AppColors.secondary),
                 const SizedBox(width: 10),
-
-                _statCard(
-                  avgRating.toStringAsFixed(1),
-                  T['rating']!,
-                  Icons.star_rounded,
-                  AppColors.warning,
-                ),
+                _statCard(weightedAvgRating.toStringAsFixed(1), T['rating']!,
+                    Icons.star_rounded, AppColors.warning),
               ],
             ),
           ),
@@ -136,31 +115,17 @@ class OrganizerScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  '🎪',
-                  style: TextStyle(fontSize: 52),
-                ),
-
+                const Text('🎪', style: TextStyle(fontSize: 52)),
                 const SizedBox(height: 14),
-
-                Text(
-                  T['noEvents']!,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.muted,
-                  ),
-                ),
-
+                Text(T['noEvents']!,
+                    style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.muted)),
                 const SizedBox(height: 8),
-
-                Text(
-                  T['create']!,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.muted,
-                  ),
-                ),
+                Text(T['create']!,
+                    style: GoogleFonts.inter(
+                        fontSize: 13, color: AppColors.muted)),
               ],
             ),
           ),
@@ -172,59 +137,41 @@ class OrganizerScreen extends StatelessWidget {
               lang: lang,
               labels: T,
               state: state,
+              onRefresh: () => context.read<AppState>().notifyListeners(),
             ),
             childCount: events.length,
           ),
         ),
 
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 90),
-        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 90)),
       ],
     );
   }
 
   Widget _statCard(
-      String value,
-      String label,
-      IconData icon,
-      Color color,
-      ) =>
+      String value, String label, IconData icon, Color color) =>
       Expanded(
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
             children: [
-              Icon(
-                icon,
-                size: 22,
-                color: color,
-              ),
-
+              Icon(icon, size: 22, color: color),
               const SizedBox(height: 6),
-
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.text,
-                ),
-              ),
-
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.muted,
-                ),
-              ),
+              Text(value,
+                  style: GoogleFonts.inter(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.text)),
+              Text(label,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.muted)),
             ],
           ),
         ),
@@ -236,58 +183,53 @@ class _OrganizerEventCard extends StatelessWidget {
   final String lang;
   final Map<String, String> labels;
   final AppState state;
+  final VoidCallback? onRefresh;
 
   const _OrganizerEventCard({
     required this.event,
     required this.lang,
     required this.labels,
     required this.state,
+    this.onRefresh,
   });
+
+  // Безопасное экранирование поля для CSV (RFC 4180).
+  // Обворачивает значение в кавычки и экранирует внутренние кавычки.
+  String _csvField(String value) {
+    final escaped = value.replaceAll('"', '""');
+    return '"$escaped"';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final participants = state.getParticipants(event.id);
-
     final fillPct = event.fillPercent.clamp(0.0, 1.0);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(
-        16,
-        0,
-        16,
-        14,
-      ),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.border,
-          width: 0.5,
-        ),
+        border: Border.all(color: AppColors.border, width: 0.5),
       ),
       child: Column(
         children: [
+          // Header with gradient
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(18),
-            ),
+            borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(18)),
             child: Container(
               height: 80,
               decoration: BoxDecoration(
-                gradient: categoryGradient(event.category),
-              ),
+                  gradient: categoryGradient(event.category)),
               child: Stack(
                 children: [
                   Center(
                     child: Opacity(
                       opacity: 0.3,
-                      child: Text(
-                        _emoji(event.category),
-                        style: const TextStyle(fontSize: 48),
-                      ),
+                      child: Text(_emoji(event.category),
+                          style: const TextStyle(fontSize: 48)),
                     ),
                   ),
-
                   Positioned(
                     bottom: 10,
                     left: 14,
@@ -296,56 +238,46 @@ class _OrganizerEventCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
                     ),
                   ),
-
                   Positioned(
                     top: 8,
                     right: 10,
                     child: Row(
                       children: [
-                        _iconBtn(
-                          Icons.edit_rounded,
-                              () => Navigator.push(
+                        _iconBtn(Icons.edit_rounded, () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => CreateEventScreen(
-                                editEvent: event,
-                              ),
-                            ),
-                          ),
-                        ),
-
+                                builder: (_) =>
+                                    CreateEventScreen(editEvent: event)),
+                          );
+                          onRefresh?.call();
+                        }),
                         const SizedBox(width: 6),
-
                         _iconBtn(
                           Icons.delete_outline_rounded,
                               () async {
                             final ok = await showDialog<bool>(
                               context: context,
                               builder: (_) => AlertDialog(
-                                title: Text(
-                                  lang == 'ru'
-                                      ? 'Удалить?'
-                                      : lang == 'kz'
-                                      ? 'Жою керек пе?'
-                                      : 'Delete?',
-                                ),
+                                title: Text(lang == 'ru'
+                                    ? 'Удалить?'
+                                    : lang == 'kz'
+                                    ? 'Жою керек пе?'
+                                    : 'Delete?'),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(context, false),
-                                    child: Text(
-                                      lang == 'ru'
-                                          ? 'Отмена'
-                                          : lang == 'kz'
-                                          ? 'Жоқ'
-                                          : 'Cancel',
-                                    ),
+                                    child: Text(lang == 'ru'
+                                        ? 'Отмена'
+                                        : lang == 'kz'
+                                        ? 'Жоқ'
+                                        : 'Cancel'),
                                   ),
                                   TextButton(
                                     onPressed: () =>
@@ -357,8 +289,7 @@ class _OrganizerEventCard extends StatelessWidget {
                                           ? 'Жою'
                                           : 'Delete',
                                       style: const TextStyle(
-                                        color: Colors.red,
-                                      ),
+                                          color: Colors.red),
                                     ),
                                   ),
                                 ],
@@ -366,7 +297,21 @@ class _OrganizerEventCard extends StatelessWidget {
                             );
 
                             if (ok == true) {
-                              state.deleteEvent(event.id);
+                              final token = state.token ?? '';
+                              try {
+                                await ApiService.deleteEvent(
+                                    event.id, token);
+                                state.deleteEvent(event.id);
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(SnackBar(
+                                    content: Text(
+                                        'Error: ${e.toString().replaceFirst('Exception: ', '')}'),
+                                    backgroundColor: Colors.red,
+                                  ));
+                                }
+                              }
                             }
                           },
                           danger: true,
@@ -384,6 +329,7 @@ class _OrganizerEventCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Fill bar
                 Row(
                   children: [
                     Expanded(
@@ -392,8 +338,7 @@ class _OrganizerEventCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: fillPct,
                           minHeight: 6,
-                          backgroundColor:
-                          const Color(0xFFF0EDFF),
+                          backgroundColor: const Color(0xFFF0EDFF),
                           valueColor: AlwaysStoppedAnimation(
                             fillPct > 0.9
                                 ? AppColors.danger
@@ -402,111 +347,43 @@ class _OrganizerEventCard extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 10),
-
                     Text(
                       '${event.registered}/${event.capacity} ${labels['registered']}',
                       style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: AppColors.muted,
-                      ),
+                          fontSize: 12, color: AppColors.muted),
                     ),
                   ],
                 ),
-
-                if (participants.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-
-                  ...participants.take(3).map(
-                        (email) => Padding(
-                      padding:
-                      const EdgeInsets.symmetric(
-                        vertical: 2,
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.person_outline_rounded,
-                            size: 14,
-                            color: AppColors.muted,
-                          ),
-
-                          const SizedBox(width: 6),
-
-                          Text(
-                            email,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: AppColors.text,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  if (participants.length > 3)
-                    Text(
-                      '+${participants.length - 3} ещё',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                ],
 
                 const SizedBox(height: 12),
 
                 // Scan QR
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                      const ScannerScreen(),
-                    ),
-                  ),
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(
+                          builder: (_) => const ScannerScreen())),
                   child: Container(
-                    margin: const EdgeInsets.only(
-                      bottom: 10,
-                    ),
-                    padding:
-                    const EdgeInsets.symmetric(
-                      vertical: 10,
-                    ),
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      color: AppColors.secondary
-                          .withOpacity(0.07),
-                      borderRadius:
-                      BorderRadius.circular(10),
+                      color: AppColors.secondary.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: AppColors.secondary
-                            .withOpacity(0.3),
-                        width: 0.5,
-                      ),
+                          color: AppColors.secondary.withValues(alpha: 0.3),
+                          width: 0.5),
                     ),
                     child: Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.qr_code_scanner_rounded,
-                          size: 16,
-                          color: AppColors.secondary,
-                        ),
-
+                        const Icon(Icons.qr_code_scanner_rounded,
+                            size: 16, color: AppColors.secondary),
                         const SizedBox(width: 6),
-
-                        Text(
-                          labels['scan']!,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.secondary,
-                          ),
-                        ),
+                        Text(labels['scan']!,
+                            style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.secondary)),
                       ],
                     ),
                   ),
@@ -515,110 +392,71 @@ class _OrganizerEventCard extends StatelessWidget {
                 // Export CSV
                 GestureDetector(
                   onTap: () async {
-                    final token =
-                        context.read<AppState>().token ??
-                            '';
-
+                    final token = context.read<AppState>().token ?? '';
                     try {
                       final regs =
-                      await ApiService
-                          .getEventRegistrations(
-                        event.id,
-                        token,
-                      );
+                      await ApiService.getEventRegistrations(
+                          event.id, token);
 
+                      // RFC 4180: каждое поле в кавычках, кавычки внутри удваиваются.
+                      // Это защищает от CSV-инъекции через запятые, кавычки и переносы строк в данных.
                       final lines = <String>[
-                        'Name,Email,Status,Date',
+                        '${_csvField('Name')},${_csvField('Email')},${_csvField('Status')},${_csvField('Date')}',
                       ];
 
                       for (final r in regs) {
                         final user = r['userId'];
-
-                        final name = (user is Map
-                            ? user['name']
-                            : '')
-                            ?.toString()
-                            .replaceAll(',', ' ') ??
-                            '';
-
-                        final email = (user is Map
-                            ? user['email']
-                            : '')
-                            ?.toString() ??
-                            '';
-
-                        final status =
-                            r['status']?.toString() ??
+                        final name =
+                            (user is Map ? user['name'] : '')?.toString() ??
                                 '';
-
-                        final date = r['createdAt']
-                            ?.toString()
-                            .substring(0, 10) ??
-                            '';
+                        final email =
+                            (user is Map ? user['email'] : '')?.toString() ??
+                                '';
+                        final status = r['status']?.toString() ?? '';
+                        final rawDate = r['createdAt']?.toString() ?? '';
+                        final date = rawDate.length >= 10
+                            ? rawDate.substring(0, 10)
+                            : rawDate;
 
                         lines.add(
-                          '$name,$email,$status,$date',
+                          '${_csvField(name)},${_csvField(email)},${_csvField(status)},${_csvField(date)}',
                         );
                       }
 
                       final csv = lines.join('\n');
-
                       final filename =
                           '${event.getTitle(lang).replaceAll(' ', '_')}.csv';
-
-                      await downloadCsv(
-                        csv,
-                        filename,
-                      );
+                      await downloadCsv(csv, filename);
                     } catch (e) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(
+                        ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                              'Ошибка: ${e.toString()}',
-                            ),
-                          ),
+                              content: Text(
+                                  'Ошибка: ${e.toString().replaceFirst('Exception: ', '')}')),
                         );
                       }
                     }
                   },
                   child: Container(
-                    padding:
-                    const EdgeInsets.symmetric(
-                      vertical: 10,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      color: AppColors.primary
-                          .withOpacity(0.07),
-                      borderRadius:
-                      BorderRadius.circular(10),
+                      color: AppColors.primary.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: AppColors.primary
-                            .withOpacity(0.3),
-                        width: 0.5,
-                      ),
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          width: 0.5),
                     ),
                     child: Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.download_rounded,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
-
+                        const Icon(Icons.download_rounded,
+                            size: 16, color: AppColors.primary),
                         const SizedBox(width: 6),
-
-                        Text(
-                          labels['export']!,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
+                        Text(labels['export']!,
+                            style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary)),
                       ],
                     ),
                   ),
@@ -631,11 +469,8 @@ class _OrganizerEventCard extends StatelessWidget {
     );
   }
 
-  Widget _iconBtn(
-      IconData icon,
-      VoidCallback onTap, {
-        bool danger = false,
-      }) =>
+  Widget _iconBtn(IconData icon, VoidCallback onTap,
+      {bool danger = false}) =>
       GestureDetector(
         onTap: onTap,
         child: Container(
@@ -643,28 +478,24 @@ class _OrganizerEventCard extends StatelessWidget {
           height: 30,
           decoration: BoxDecoration(
             color: danger
-                ? AppColors.danger.withOpacity(0.25)
-                : Colors.white.withOpacity(0.25),
+                ? AppColors.danger.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.25),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
-            child: Icon(
-              icon,
-              size: 14,
-              color: Colors.white,
-            ),
-          ),
+              child: Icon(icon, size: 14, color: Colors.white)),
         ),
       );
 
-  String _emoji(String cat) => {
-    'Conference': '🎤',
-    'Sports': '⚽',
-    'Workshop': '💻',
-    'Social': '🎉',
-    'Art': '🎨',
-    'Music': '🎵',
-    'Seminar': '📚',
-  }[cat] ??
-      '🎯';
+  String _emoji(String cat) =>
+      {
+        'Conference': '🎤',
+        'Sports': '⚽',
+        'Workshop': '💻',
+        'Social': '🎉',
+        'Art': '🎨',
+        'Music': '🎵',
+        'Seminar': '📚',
+      }[cat] ??
+          '🎯';
 }

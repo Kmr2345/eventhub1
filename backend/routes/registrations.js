@@ -60,6 +60,21 @@ router.post("/", auth, async (req, res) => {
     await registration.save();
     await Event.findByIdAndUpdate(eventObjectId, { $inc: { registeredCount: 1 } });
 
+    // Уведомляем организатора о новой регистрации
+    try {
+      const event = await Event.findById(eventObjectId);
+      if (event && event.organizerId) {
+        await createNotification(
+          event.organizerId,
+          "Новая регистрация",
+          `Студент зарегистрировался на «${event.title}»`,
+          { type: "newRegistration", eventId: eventObjectId.toString() }
+        );
+      }
+    } catch (notifyErr) {
+      console.log("NOTIFY ERROR:", notifyErr?.message ?? notifyErr);
+    }
+
     return res.json(registration);
   } catch (err) {
     console.log("ERROR:", err);
@@ -98,6 +113,22 @@ router.put("/:id/cancel", auth, async (req, res) => {
     await Event.findByIdAndUpdate(registration.eventId, { $inc: { registeredCount: -1 } });
 
     console.log("AFTER UPDATE:", registration.status);
+
+    // Уведомляем организатора об отмене
+    try {
+      const event = await Event.findById(registration.eventId);
+      if (event && event.organizerId) {
+        await createNotification(
+          event.organizerId,
+          "Отмена регистрации",
+          `Студент отменил регистрацию на «${event.title}»`,
+          { type: "cancelRegistration", eventId: registration.eventId.toString() }
+        );
+      }
+    } catch (notifyErr) {
+      console.log("NOTIFY ERROR:", notifyErr?.message ?? notifyErr);
+    }
+
     return res.json(registration);
   } catch (err) {
     console.log("CANCEL ERROR:", err);
