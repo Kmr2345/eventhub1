@@ -56,7 +56,7 @@ class EventCard extends StatelessWidget {
           color: AppColors.card,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.border, width: 0.5),
-          boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +75,7 @@ class EventCard extends StatelessWidget {
                     CachedNetworkImage(
                       imageUrl: event.image.isNotEmpty ? event.image : _categoryDefaultImage(event.category),
                       fit: BoxFit.cover,
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       colorBlendMode: BlendMode.multiply,
                       errorWidget: (_, __, ___) => const SizedBox(),
                     ),
@@ -84,7 +84,7 @@ class EventCard extends StatelessWidget {
                       bottom: 10, left: 14,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(20)),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(20)),
                         child: Text(
                           categoryLabel(event.category, language).toUpperCase(),
                           style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 0.5),
@@ -109,7 +109,7 @@ class EventCard extends StatelessWidget {
                           onTap: onFavorite,
                           child: Container(
                             width: 32, height: 32,
-                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
+                            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), shape: BoxShape.circle),
                             child: Center(
                               child: Icon(isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                                   size: 17, color: isFavorite ? AppColors.pink : AppColors.muted),

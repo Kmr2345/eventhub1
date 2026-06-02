@@ -156,7 +156,7 @@ class _MainScreenState extends State<MainScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.15),
+                        color: AppColors.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text('ADMIN',
@@ -291,7 +291,7 @@ class _MainScreenState extends State<MainScreen> {
         border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
         boxShadow: [
           BoxShadow(
-              color: AppColors.primary.withOpacity(0.06),
+              color: AppColors.primary.withValues(alpha:0.06),
               blurRadius: 20,
               offset: const Offset(0, -4))
         ],
@@ -320,7 +320,7 @@ class _MainScreenState extends State<MainScreen> {
                         decoration: BoxDecoration(
                           color: active
                               ? AppColors.primary
-                              : AppColors.primary.withOpacity(0.12),
+                              : AppColors.primary.withValues(alpha:0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.add_rounded,

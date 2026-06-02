@@ -5,7 +5,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendVerificationEmail = require("../utils/sendEmail");
 const createNotification = require("../utils/createNotification");
-const User = require("../models/User");
 
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();

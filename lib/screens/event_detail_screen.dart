@@ -327,7 +327,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha:0.2), shape: BoxShape.circle),
                   child: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                 ),
               ),
@@ -349,7 +349,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     },
                     child: Container(
                       width: 36, height: 36,
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha:0.2), shape: BoxShape.circle),
                       child: const Center(child: Icon(Icons.edit_rounded, color: Colors.white, size: 18)),
                     ),
                   ),
@@ -365,7 +365,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     },
                     child: Container(
                       width: 36, height: 36,
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha:.2), shape: BoxShape.circle),
                       child: Center(child: Icon(state.isFavoriteEvent(e.id) ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: Colors.white, size: 18)),
                     ),
                   ),
@@ -379,7 +379,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   CachedNetworkImage(
                     imageUrl: e.image,
                     fit: BoxFit.cover,
-                    color: Colors.black.withOpacity(0.35),
+                    color: Colors.black.withValues(alpha:0.35),
                     colorBlendMode: BlendMode.multiply,
                     errorWidget: (_, __, ___) => const SizedBox(),
                   ),
@@ -390,7 +390,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(20)),
+                          decoration: BoxDecoration(color: Colors.white.withValues(alpha:0.25), borderRadius: BorderRadius.circular(20)),
                           child: Text(categoryLabel(e.category, lang).toUpperCase(), style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5)),
                         ),
                         const SizedBox(height: 6),
@@ -472,7 +472,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   if (isReg) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(color: Colors.green.withValues(alpha:0.1), borderRadius: BorderRadius.circular(8)),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -511,7 +511,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(color: AppColors.secondary.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(color: AppColors.secondary.withValues(alpha:0.1), borderRadius: BorderRadius.circular(10)),
                             child: Text('✓ ${getLabel('registered', lang)}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
                           ),
                         ],
@@ -665,7 +665,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   if (isStudent && _canReview) ...[
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1)),
+                      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha:0.3), width: 1)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -729,7 +729,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   if (isStudent && _alreadyReviewed) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(color: Colors.green.withValues(alpha:0.1), borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -776,7 +776,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           color: AppColors.card,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isEditing ? AppColors.primary.withOpacity(0.5) : AppColors.border,
+                            color: isEditing ? AppColors.primary.withValues(alpha:0.5) : AppColors.border,
                             width: isEditing ? 1.5 : 0.5,
                           ),
                         ),
@@ -787,7 +787,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               children: [
                                 Container(
                                   width: 36, height: 36,
-                                  decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+                                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha:0.1), shape: BoxShape.circle),
                                   child: Center(child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary))),
                                 ),
                                 const SizedBox(width: 10),
@@ -1131,7 +1131,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border, width: 0.5)),
     child: Row(
       children: [
-        Container(width: 34, height: 34, decoration: BoxDecoration(color: starColor.withOpacity(0.1), borderRadius: BorderRadius.circular(9)), child: Center(child: Icon(icon, size: 17, color: starColor))),
+        Container(width: 34, height: 34, decoration: BoxDecoration(color: starColor.withValues(alpha:0.1), borderRadius: BorderRadius.circular(9)), child: Center(child: Icon(icon, size: 17, color: starColor))),
         const SizedBox(width: 12),
         Expanded(child: Text(text, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.text))),
       ],
@@ -1171,7 +1171,7 @@ class _ShareButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: gradient.first.withOpacity(0.35),
+                  color: gradient.first.withValues(alpha:.35),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

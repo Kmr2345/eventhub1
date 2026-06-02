@@ -199,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 gradient: LinearGradient(
                                     colors: [
                                       Colors.transparent,
-                                      Colors.black.withOpacity(0.5)
+                                      Colors.black.withValues(alpha:0.5)
                                     ],
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter),
@@ -223,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       style: GoogleFonts.inter(
                                           fontSize: 10,
                                           color: Colors.white
-                                              .withOpacity(0.8))),
+                                              .withValues(alpha:0.8))),
                                 ],
                               ),
                             ),

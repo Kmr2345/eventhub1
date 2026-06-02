@@ -101,7 +101,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: Container(
                     margin: const EdgeInsets.only(top: 12, bottom: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha:0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     padding: const EdgeInsets.all(4),
@@ -122,7 +122,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               l.toUpperCase(),
                               style: GoogleFonts.inter(
                                 fontSize: 12, fontWeight: FontWeight.w700,
-                                color: active ? AppColors.primary : Colors.white.withOpacity(0.8),
+                                color: active ? AppColors.primary : Colors.white.withValues(alpha:0.8),
                               ),
                             ),
                           ),
@@ -137,20 +137,20 @@ class _AuthScreenState extends State<AuthScreen> {
                 Container(
                   width: 72, height: 72,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha:0.25),
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                    border: Border.all(color: Colors.white.withValues(alpha:0.5), width: 2),
                   ),
                   child: const Center(child: Text('🎯', style: TextStyle(fontSize: 32))),
                 ),
                 const SizedBox(height: 16),
-                Text(t['welcome']!, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withOpacity(0.85))),
+                Text(t['welcome']!, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withValues(alpha:0.85))),
                 const SizedBox(height: 4),
                 Text('EventHub', style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
                 const SizedBox(height: 4),
-                Text('Astana IT University', style: GoogleFonts.inter(fontSize: 14, color: Colors.white.withOpacity(0.8))),
+                Text('Astana IT University', style: GoogleFonts.inter(fontSize: 14, color: Colors.white.withValues(alpha:0.8))),
                 const SizedBox(height: 4),
-                Text(t['tagline']!, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withOpacity(0.7)), textAlign: TextAlign.center),
+                Text(t['tagline']!, style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withValues(alpha:0.7)), textAlign: TextAlign.center),
                 const SizedBox(height: 20),
 
                 // Features row
@@ -171,7 +171,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.15), blurRadius: 40, offset: const Offset(0, 8))],
+                    boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha:0.15), blurRadius: 40, offset: const Offset(0, 8))],
                   ),
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -344,11 +344,11 @@ class _AuthScreenState extends State<AuthScreen> {
     children: [
       Container(
         width: 44, height: 44,
-        decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha:0.2), borderRadius: BorderRadius.circular(12)),
         child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
       ),
       const SizedBox(height: 6),
-      Text(label, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+      Text(label, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withValues(alpha:0.85), fontWeight: FontWeight.w500), textAlign: TextAlign.center),
     ],
   );
 
