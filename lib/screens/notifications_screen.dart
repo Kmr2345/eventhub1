@@ -26,15 +26,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final isDark = state.isDarkMode;
+    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
+    final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
+    final cText  = isDark ? AppColors.darkText  : AppColors.text;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
     final lang = state.language;
     final title = lang == 'ru' ? 'Уведомления' : lang == 'kz' ? 'Хабарламалар' : 'Notifications';
     final list = state.notifications;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: cBg,
       appBar: AppBar(
         title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w800)),
-        backgroundColor: AppColors.card,
+        backgroundColor: cCard,
         leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => Navigator.pop(context)),
         actions: [
           TextButton(
@@ -52,12 +58,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               : lang == 'kz'
               ? 'Әзірге хабарлама жоқ'
               : 'No notifications yet',
-          style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted),
+          style: GoogleFonts.inter(fontSize: 14, color: cMuted),
         ),
       )
           : ListView.separated(
         itemCount: list.length,
-        separatorBuilder: (_, __) => const Divider(height: 0.5, color: AppColors.border, indent: 72),
+        separatorBuilder: (_, __) => Divider(height: 0.5, color: cBorder, indent: 72),
         itemBuilder: (_, i) {
           final n = list[i];
           if (n is! Map) return const SizedBox();
@@ -73,9 +79,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           final metaType = (n['meta'] is Map ? n['meta']['type'] : null)?.toString();
 
           return InkWell(
-            onTap: (eventId == null || eventId.isEmpty)
-                ? null
-                : () async {
+            onTap: () async {
               final appState = context.read<AppState>();
               final token = appState.token;
 
@@ -85,23 +89,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               // 1) Update UI immediately
               if (!isRead) {
                 appState.markNotificationAsRead(notificationId);
+                ApiService.markNotificationRead(notificationId, token).catchError((_) {
+                  ApiService.getNotifications(token).then(appState.setNotifications).catchError((_) {});
+                });
               }
 
-              // 2) Send to backend (fire-and-forget, UI already updated)
-              ApiService.markNotificationRead(notificationId, token).catchError((_) {
-                // Если запрос упал — откатываем пометку обратно в непрочитанное
-                appState.markNotificationAsRead(notificationId); // нет обратного метода, но
-                // перезагружаем актуальное состояние с сервера
-                ApiService.getNotifications(token).then(appState.setNotifications).catchError((_) {});
-              });
+              // 2) If no eventId — just mark as read, no navigation
+              if (eventId == null || eventId.isEmpty) return;
 
-              // 3) Navigate and wait until user returns
+              // 3) Navigate to event
               await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => EventDetailScreen(
                     eventId: eventId,
-                    scrollToReviews: metaType == 'newReview', // ✅
+                    scrollToReviews: metaType == 'newReview',
                   ),
                 ),
               );
@@ -112,7 +114,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               appState.setNotifications(data);
             },
             child: Container(
-              color: isRead ? AppColors.card : AppColors.primary.withOpacity(0.03),
+              color: isRead ? cCard : AppColors.primary.withOpacity(0.03),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +144,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
-                                  color: AppColors.text,
+                                  color: cText,
                                 ),
                               ),
                             ),
@@ -150,14 +152,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           ],
                         ),
                         const SizedBox(height: 3),
-                        Text(body, style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, height: 1.4)),
+                        Text(body, style: GoogleFonts.inter(fontSize: 12, color: cMuted, height: 1.4)),
                       ],
                     ),
                   ),
                   if (eventId != null && eventId.isNotEmpty)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 8, top: 2),
-                      child: Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 2),
+                      child: Icon(Icons.chevron_right_rounded, color: cMuted),
                     ),
                 ],
               ),

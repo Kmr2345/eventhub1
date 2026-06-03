@@ -21,9 +21,12 @@ class EventHubApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     return MaterialApp(
       title: 'EventHub',
       theme: AppTheme.theme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -35,14 +38,11 @@ class EventHubApp extends StatelessWidget {
         Locale('kz'),
         Locale('en'),
       ],
-      home: Consumer<AppState>(
-        builder: (_, state, __) {
-          if (state.isLoading) return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-          return state.user == null ? const AuthScreen() : const MainScreen();
-        },
-      ),
+      home: state.isLoading
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : state.user == null
+          ? const AuthScreen()
+          : const MainScreen(),
     );
   }
 }

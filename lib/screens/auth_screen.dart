@@ -79,12 +79,21 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final t = _labels[state.language]!;
+    final isDark = state.isDarkMode;
+    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
+    final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
+    final cText  = isDark ? AppColors.darkText  : AppColors.text;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
+
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6C5CE7), Color(0xFFA29BFE), Color(0xFFF7F6FF)],
+            colors: isDark
+                ? [Color(0xFF4A3DB5), Color(0xFF6C5CE7), AppColors.darkBg]
+                : [Color(0xFF6C5CE7), Color(0xFFA29BFE), Color(0xFFF7F6FF)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: [0.0, 0.4, 0.75],
@@ -178,12 +187,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (isRegister) ...[
-                        _buildField(t['name']!, _nameCtrl, t['nameHint']!, false),
+                        _buildField(context, t['name']!, _nameCtrl, t['nameHint']!, false),
                         const SizedBox(height: 14),
                       ],
-                      _buildField(t['email']!, _emailCtrl, 'email@aitu.edu.kz', false, invalid: _emailInvalid),
+                      _buildField(context, t['email']!, _emailCtrl, 'email@aitu.edu.kz', false, invalid: _emailInvalid),
                       const SizedBox(height: 14),
-                      _buildField(t['password']!, _passwordCtrl, '••••••••', true, invalid: _passwordInvalid),
+                      _buildField(context, t['password']!, _passwordCtrl, '••••••••', true, invalid: _passwordInvalid),
                       const SizedBox(height: 20),
 
                       // Primary action button
@@ -316,7 +325,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           child: RichText(
                             textAlign: TextAlign.center,
                             text: TextSpan(
-                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w500),
+                              style: GoogleFonts.inter(fontSize: 12, color: cMuted, fontWeight: FontWeight.w500),
                               children: [
                                 TextSpan(text: isRegister ? t['signinPrompt']! : t['signupPrompt']!),
                                 TextSpan(
@@ -340,56 +349,66 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _featureItem(String emoji, String label) => Column(
-    children: [
-      Container(
-        width: 44, height: 44,
-        decoration: BoxDecoration(color: Colors.white.withValues(alpha:0.2), borderRadius: BorderRadius.circular(12)),
-        child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
-      ),
-      const SizedBox(height: 6),
-      Text(label, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withValues(alpha:0.85), fontWeight: FontWeight.w500), textAlign: TextAlign.center),
-    ],
+  Widget _featureItem(String emoji, String label) => SizedBox(
+    width: 90,
+    child: Column(
+      children: [
+        Container(
+          width: 52, height: 52,
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha:0.2), borderRadius: BorderRadius.circular(14)),
+          child: Center(child: Text(emoji, style: const TextStyle(fontSize: 24, height: 1))),
+        ),
+        const SizedBox(height: 6),
+        Text(label, style: GoogleFonts.inter(fontSize: 10, color: Colors.white.withValues(alpha:0.85), fontWeight: FontWeight.w500), textAlign: TextAlign.center, maxLines: 2),
+      ],
+    ),
   );
 
   Widget _buildField(
+      BuildContext context,
       String label,
       TextEditingController ctrl,
       String hint,
       bool obscure, {
         bool invalid = false,
-      }) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: ctrl,
-            obscureText: obscure,
-            style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: GoogleFonts.inter(color: AppColors.muted),
-              filled: true,
-              fillColor: AppColors.bg,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: invalid ? AppColors.danger : AppColors.border, width: 0.5),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-              ),
+      }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
+    final cText  = isDark ? AppColors.darkText  : AppColors.text;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: cMuted)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: ctrl,
+          obscureText: obscure,
+          style: GoogleFonts.inter(fontSize: 14, color: cText),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.inter(color: cMuted),
+            filled: true,
+            fillColor: cBg,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: invalid ? AppColors.danger : cBorder, width: 0.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: invalid ? AppColors.danger : cBorder, width: 0.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 
   bool isValidEmail(String email) {
     // Строгая проверка: локальная часть, @, домен, точка, TLD минимум 2 символа

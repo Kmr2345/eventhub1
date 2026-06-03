@@ -42,6 +42,12 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
+    final cText  = isDark ? AppColors.darkText  : AppColors.text;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
+    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
     final title    = event.getTitle(language);
     final location = event.getLocation(language);
     final gradient = categoryGradient(event.category);
@@ -53,9 +59,9 @@ class EventCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: cCard,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border, width: 0.5),
+          border: Border.all(color: cBorder, width: 0.5),
           boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 4))],
         ),
         child: Column(
@@ -112,7 +118,7 @@ class EventCard extends StatelessWidget {
                             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), shape: BoxShape.circle),
                             child: Center(
                               child: Icon(isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                  size: 17, color: isFavorite ? AppColors.pink : AppColors.muted),
+                                  size: 17, color: isFavorite ? AppColors.pink : cMuted),
                             ),
                           ),
                         ),
@@ -128,17 +134,17 @@ class EventCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.text), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(title, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: cText), maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Flexible(child: Text(when, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis)),
+                      Flexible(child: Text(when, style: GoogleFonts.inter(fontSize: 11, color: cMuted), overflow: TextOverflow.ellipsis)),
                       const SizedBox(width: 8),
                       const Icon(Icons.location_on_rounded, size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Expanded(child: Text(location, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis)),
+                      Expanded(child: Text(location, style: GoogleFonts.inter(fontSize: 11, color: cMuted), overflow: TextOverflow.ellipsis)),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -162,13 +168,13 @@ class EventCard extends StatelessWidget {
                       Row(children: [
                         const Icon(Icons.people_rounded, size: 12, color: AppColors.primary),
                         const SizedBox(width: 3),
-                        Text('${event.registered}/${event.capacity}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                        Text('${event.registered}/${event.capacity}', style: GoogleFonts.inter(fontSize: 11, color: cMuted)),
                       ]),
                       const SizedBox(width: 10),
                       Row(children: [
                         const Icon(Icons.star_rounded, size: 12, color: AppColors.warning),
                         const SizedBox(width: 3),
-                        Text(event.rating.toStringAsFixed(1), style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                        Text(event.rating.toStringAsFixed(1), style: GoogleFonts.inter(fontSize: 11, color: cMuted)),
                       ]),
                     ],
                   ),

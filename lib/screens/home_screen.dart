@@ -54,6 +54,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final isDark = state.isDarkMode;
+    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
+    final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
+    final cText  = isDark ? AppColors.darkText  : AppColors.text;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
     final lang = state.language;
 
     // Безопасное получение пользователя — без null-assertion (!)
@@ -89,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
               : lang == 'kz'
               ? 'Іс-шара жоқ'
               : 'No events yet',
-          style: GoogleFonts.inter(fontSize: 15, color: AppColors.muted),
+          style: GoogleFonts.inter(fontSize: 15, color: cMuted),
         ),
       );
     }
@@ -120,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Greeting
           SliverToBoxAdapter(
             child: Container(
-              color: AppColors.card,
+              color: cCard,
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,11 +135,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.text)),
+                          color: cText)),
                   const SizedBox(height: 2),
                   Text(sub,
                       style: GoogleFonts.inter(
-                          fontSize: 13, color: AppColors.muted)),
+                          fontSize: 13, color: cMuted)),
                 ],
               ),
             ),
@@ -152,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.muted,
+                    color: cMuted,
                     letterSpacing: 0.6),
               ),
             ),
@@ -182,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         gradient: categoryGradient(e.category),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: AppColors.border, width: 0.5),
+                            color: cBorder, width: 0.5),
                       ),
                       child: Stack(
                         children: [
@@ -250,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.muted,
+                    color: cMuted,
                     letterSpacing: 0.6),
               ),
             ),
@@ -268,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ? 'Жақын іс-шаралар жоқ'
                         : 'No upcoming events',
                     style: GoogleFonts.inter(
-                        fontSize: 14, color: AppColors.muted),
+                        fontSize: 14, color: cMuted),
                   ),
                 ),
               ),

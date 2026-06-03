@@ -7,6 +7,7 @@ class AppState extends ChangeNotifier {
   UserModel? user;
   String? token;
   String language = 'ru';
+  bool isDarkMode = false;
   List<EventModel> events = [];
   List<dynamic> myRegistrations = [];
   List<dynamic> favorites = [];
@@ -29,6 +30,7 @@ class AppState extends ChangeNotifier {
       final savedLang = prefs.getString('language');
 
       if (savedLang != null) language = savedLang;
+      isDarkMode = prefs.getBool('dark_mode') ?? false;
 
       if (savedToken != null &&
           savedEmail != null &&
@@ -74,6 +76,7 @@ class AppState extends ChangeNotifier {
       await prefs.setString('user_role', user!.role);
     }
     await prefs.setString('language', language);
+    await prefs.setBool('dark_mode', isDarkMode);
   }
 
   Future<void> _clearSession() async {
@@ -111,6 +114,12 @@ class AppState extends ChangeNotifier {
 
   void setLanguage(String lang) {
     language = lang;
+    _saveSession();
+    notifyListeners();
+  }
+
+  void setDarkMode(bool value) {
+    isDarkMode = value;
     _saveSession();
     notifyListeners();
   }

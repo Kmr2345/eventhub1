@@ -44,6 +44,12 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final isDark = state.isDarkMode;
+    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
+    final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
+    final cText  = isDark ? AppColors.darkText  : AppColors.text;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
     final lang  = state.language;
     final results = state.filtered(query: _query, category: _category);
     final hint = lang == 'ru' ? 'Поиск мероприятий...' : lang == 'kz' ? 'Іс-шара іздеу...' : 'Search events...';
@@ -53,7 +59,7 @@ class _SearchScreenState extends State<SearchScreen> {
         // Search bar
         SliverToBoxAdapter(
           child: Container(
-            color: AppColors.card,
+            color: cCard,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: TextField(
               controller: _ctrl,
@@ -90,17 +96,17 @@ class _SearchScreenState extends State<SearchScreen> {
                 if (!mounted) return;
                 setState(() => _query = v);
               },
-              style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+              style: GoogleFonts.inter(fontSize: 14, color: cText),
               decoration: InputDecoration(
                 hintText: hint,
-                prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted, size: 20),
+                prefixIcon: Icon(Icons.search_rounded, color: cMuted, size: 20),
                 suffixIcon: _query.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.muted), onPressed: () { _ctrl.clear(); setState(() => _query = ''); })
+                    ? IconButton(icon: Icon(Icons.close_rounded, size: 18, color: cMuted), onPressed: () { _ctrl.clear(); setState(() => _query = ''); })
                     : null,
-                filled: true, fillColor: AppColors.bg,
+                filled: true, fillColor: cBg,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: cBorder, width: 0.5)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: cBorder, width: 0.5)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
               ),
             ),
@@ -110,7 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
         // Category chips
         SliverToBoxAdapter(
           child: Container(
-            color: AppColors.card,
+            color: cCard,
             padding: const EdgeInsets.fromLTRB(16, 10, 0, 12),
             child: SizedBox(
               height: 34,
@@ -129,11 +135,11 @@ class _SearchScreenState extends State<SearchScreen> {
                       duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: active ? AppColors.primary : AppColors.card,
+                        color: active ? AppColors.primary : cCard,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: active ? AppColors.primary : AppColors.border, width: 0.5),
+                        border: Border.all(color: active ? AppColors.primary : cBorder, width: 0.5),
                       ),
-                      child: Text('$emoji$label', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: active ? Colors.white : AppColors.muted)),
+                      child: Text('$emoji$label', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: active ? Colors.white : cMuted)),
                     ),
                   );
                 },
@@ -150,7 +156,7 @@ class _SearchScreenState extends State<SearchScreen> {
               lang == 'ru' ? 'Результаты · ${results.length} событий'
                   : lang == 'kz' ? 'Нәтижелер · ${results.length} іс-шара'
                   : 'Results · ${results.length} events',
-              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.5),
+              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: cMuted, letterSpacing: 0.5),
             ),
           ),
         ),
@@ -158,38 +164,38 @@ class _SearchScreenState extends State<SearchScreen> {
         // Results
         results.isEmpty
             ? SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('🔍', style: TextStyle(fontSize: 48)),
-                      const SizedBox(height: 12),
-                      Text(lang == 'ru' ? 'Ничего не найдено' : lang == 'kz' ? 'Ештеңе табылмады' : 'No events found',
-                          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.muted)),
-                    ],
-                  ),
-                ),
-              )
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('🔍', style: TextStyle(fontSize: 48)),
+                const SizedBox(height: 12),
+                Text(lang == 'ru' ? 'Ничего не найдено' : lang == 'kz' ? 'Ештеңе табылмады' : 'No events found',
+                    style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: cMuted)),
+              ],
+            ),
+          ),
+        )
             : SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) {
-                    final e = results[i];
-                    return EventCard(
-                      event: e, language: lang,
-                      isFavorite: state.isFavoriteEvent(e.id),
-                      isRegistered: state.isRegistered(e.id),
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
-                      onFavorite: () {
-                        final wasFav = state.isFavoriteEvent(e.id);
-                        state.syncToggleFavorite(e.id);
-                        showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
-                      },
-                      showFavoriteButton: state.user?.role != 'organizer',
-                    );
-                  },
-                  childCount: results.length,
-                ),
-              ),
+          delegate: SliverChildBuilderDelegate(
+                (_, i) {
+              final e = results[i];
+              return EventCard(
+                event: e, language: lang,
+                isFavorite: state.isFavoriteEvent(e.id),
+                isRegistered: state.isRegistered(e.id),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
+                onFavorite: () {
+                  final wasFav = state.isFavoriteEvent(e.id);
+                  state.syncToggleFavorite(e.id);
+                  showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
+                },
+                showFavoriteButton: state.user?.role != 'organizer',
+              );
+            },
+            childCount: results.length,
+          ),
+        ),
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
       ],
     );

@@ -76,6 +76,8 @@ class _MainScreenState extends State<MainScreen> {
     final role = state.user?.role ?? 'student';
     final isOrganizer = role == 'organizer';
     final isAdmin = role == 'admin';
+    final isDark = state.isDarkMode;
+    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
 
     final studentTabs = [
       const HomeScreen(),
@@ -107,7 +109,7 @@ class _MainScreenState extends State<MainScreen> {
     final currentIndex = _currentIndex.clamp(0, tabs.length - 1);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: cBg,
       appBar: _buildAppBar(context, state, isOrganizer, isAdmin),
       body: IndexedStack(index: currentIndex, children: tabs),
       bottomNavigationBar:
@@ -117,6 +119,9 @@ class _MainScreenState extends State<MainScreen> {
 
   PreferredSizeWidget _buildAppBar(
       BuildContext context, AppState state, bool isOrganizer, bool isAdmin) {
+    final isDark = state.isDarkMode;
+    final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
     final unreadCount = state.notifications.where((n) {
       if (n is! Map) return false;
       final v = n['read'] ?? n['isRead'];
@@ -124,7 +129,7 @@ class _MainScreenState extends State<MainScreen> {
     }).length;
 
     return AppBar(
-      backgroundColor: AppColors.card,
+      backgroundColor: cCard,
       elevation: 0,
       titleSpacing: 20,
       title: Row(
@@ -136,7 +141,7 @@ class _MainScreenState extends State<MainScreen> {
               Text('Astana IT University',
                   style: GoogleFonts.inter(
                       fontSize: 10,
-                      color: AppColors.muted,
+                      color: cMuted,
                       fontWeight: FontWeight.w500)),
               Row(
                 children: [
@@ -245,6 +250,10 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildBottomNav(
       AppState state, bool isOrganizer, bool isAdmin, int currentIndex) {
+    final isDark = state.isDarkMode;
+    final cCard  = isDark ? AppColors.darkBg  : AppColors.card;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
     final lang = state.language;
 
     List<Map<String, dynamic>> items;
@@ -288,7 +297,7 @@ class _MainScreenState extends State<MainScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
-        border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+        border: Border(top: BorderSide(color: cBorder, width: 0.5)),
         boxShadow: [
           BoxShadow(
               color: AppColors.primary.withValues(alpha:0.06),

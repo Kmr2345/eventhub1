@@ -15,42 +15,48 @@ class FavoritesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final isDark = state.isDarkMode;
+    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
+    final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
+    final cText  = isDark ? AppColors.darkText  : AppColors.text;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
     final lang  = state.language;
     final favs  = state.favoriteEvents;
 
     return favs.isEmpty
         ? Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('❤️', style: TextStyle(fontSize: 52)),
-                const SizedBox(height: 14),
-                Text(lang == 'ru' ? 'Нет избранных' : lang == 'kz' ? 'Таңдаулы жоқ' : 'No saved events',
-                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.muted)),
-                const SizedBox(height: 8),
-                Text(lang == 'ru' ? 'Нажмите ❤️ на карточке события' : lang == 'kz' ? 'Іс-шара картасындағы ❤️ басыңыз' : 'Tap ❤️ on any event card',
-                    style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
-              ],
-            ),
-          )
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('❤️', style: TextStyle(fontSize: 52)),
+          const SizedBox(height: 14),
+          Text(lang == 'ru' ? 'Нет избранных' : lang == 'kz' ? 'Таңдаулы жоқ' : 'No saved events',
+              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: cMuted)),
+          const SizedBox(height: 8),
+          Text(lang == 'ru' ? 'Нажмите ❤️ на карточке события' : lang == 'kz' ? 'Іс-шара картасындағы ❤️ басыңыз' : 'Tap ❤️ on any event card',
+              style: GoogleFonts.inter(fontSize: 13, color: cMuted)),
+        ],
+      ),
+    )
         : ListView.builder(
-            padding: const EdgeInsets.only(top: 12),
-            itemCount: favs.length,
-            itemBuilder: (_, i) {
-              final e = favs[i];
-              return EventCard(
-                event: e, language: lang,
-                isFavorite: state.isFavoriteEvent(e.id),
-                isRegistered: state.isRegistered(e.id),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
-                onFavorite: () {
-                  final wasFav = state.isFavoriteEvent(e.id);
-                  state.syncToggleFavorite(e.id);
-                  showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
-                },
-                showFavoriteButton: state.user?.role != 'organizer',
-              );
-            },
-          );
+      padding: const EdgeInsets.only(top: 12),
+      itemCount: favs.length,
+      itemBuilder: (_, i) {
+        final e = favs[i];
+        return EventCard(
+          event: e, language: lang,
+          isFavorite: state.isFavoriteEvent(e.id),
+          isRegistered: state.isRegistered(e.id),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: e))),
+          onFavorite: () {
+            final wasFav = state.isFavoriteEvent(e.id);
+            state.syncToggleFavorite(e.id);
+            showSnack(context, getMessage(wasFav ? "favoriteRemoved" : "favoriteAdded", lang));
+          },
+          showFavoriteButton: state.user?.role != 'organizer',
+        );
+      },
+    );
   }
 }
