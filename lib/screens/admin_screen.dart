@@ -86,7 +86,7 @@ class _AdminScreenState extends State<AdminScreen>
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Отмена',
-                style: GoogleFonts.inter(color: AppColors.muted)),
+                style: GoogleFonts.inter(color: ctx.mutedColor)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -139,7 +139,7 @@ class _AdminScreenState extends State<AdminScreen>
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text('Отмена',
-                  style: GoogleFonts.inter(color: AppColors.muted))),
+                  style: GoogleFonts.inter(color: ctx.mutedColor))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red,
                 shape: RoundedRectangleBorder(
@@ -187,7 +187,7 @@ class _AdminScreenState extends State<AdminScreen>
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text('Отмена',
-                  style: GoogleFonts.inter(color: AppColors.muted))),
+                  style: GoogleFonts.inter(color: ctx.mutedColor))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red,
                 shape: RoundedRectangleBorder(
@@ -244,11 +244,11 @@ class _AdminScreenState extends State<AdminScreen>
       children: [
         // Tab bar
         Container(
-          color: AppColors.card,
+          color: context.cardColor,
           child: TabBar(
             controller: _tabController,
             labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.muted,
+            unselectedLabelColor: context.mutedColor,
             indicatorColor: AppColors.primary,
             labelStyle: GoogleFonts.inter(
                 fontSize: 12, fontWeight: FontWeight.w700),
@@ -289,7 +289,7 @@ class _AdminScreenState extends State<AdminScreen>
       children: [
         Text('Общая статистика',
             style: GoogleFonts.inter(fontSize: 18,
-                fontWeight: FontWeight.w800, color: AppColors.text)),
+                fontWeight: FontWeight.w800, color: context.textColor)),
         const SizedBox(height: 16),
         GridView.count(
           crossAxisCount: 2,
@@ -299,6 +299,7 @@ class _AdminScreenState extends State<AdminScreen>
           mainAxisSpacing: 12,
           childAspectRatio: 1.4,
           children: cards.map((c) => _statCard(
+            context: context,
             label: c['label'] as String,
             value: c['value']?.toString() ?? '0',
             icon: c['icon'] as IconData,
@@ -310,6 +311,7 @@ class _AdminScreenState extends State<AdminScreen>
   }
 
   Widget _statCard({
+    required BuildContext context,
     required String label,
     required String value,
     required IconData icon,
@@ -317,7 +319,7 @@ class _AdminScreenState extends State<AdminScreen>
   }) =>
       Container(
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [BoxShadow(
               color: color.withOpacity(0.12),
@@ -341,10 +343,10 @@ class _AdminScreenState extends State<AdminScreen>
               children: [
                 Text(value,
                     style: GoogleFonts.inter(fontSize: 24,
-                        fontWeight: FontWeight.w800, color: AppColors.text)),
+                        fontWeight: FontWeight.w800, color: context.textColor)),
                 Text(label,
                     style: GoogleFonts.inter(fontSize: 11,
-                        color: AppColors.muted, fontWeight: FontWeight.w500)),
+                        color: context.mutedColor, fontWeight: FontWeight.w500)),
               ],
             ),
           ],
@@ -359,7 +361,7 @@ class _AdminScreenState extends State<AdminScreen>
     if (_users.isEmpty) {
       return Center(
         child: Text('Нет пользователей',
-            style: GoogleFonts.inter(color: AppColors.muted)),
+            style: GoogleFonts.inter(color: context.mutedColor)),
       );
     }
     return RefreshIndicator(
@@ -377,9 +379,9 @@ class _AdminScreenState extends State<AdminScreen>
 
           return Container(
             decoration: BoxDecoration(
-              color: AppColors.card,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border, width: 0.5),
+              border: Border.all(color: context.borderColor, width: 0.5),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
@@ -403,10 +405,10 @@ class _AdminScreenState extends State<AdminScreen>
                           style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
-                              color: AppColors.text)),
+                              color: context.textColor)),
                       Text(email,
                           style: GoogleFonts.inter(
-                              fontSize: 11, color: AppColors.muted)),
+                              fontSize: 11, color: context.mutedColor)),
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -427,8 +429,8 @@ class _AdminScreenState extends State<AdminScreen>
                   ),
                 ),
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert,
-                      color: AppColors.muted, size: 20),
+                  icon: Icon(Icons.more_vert,
+                      color: context.mutedColor, size: 20),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   onSelected: (v) {
@@ -473,7 +475,7 @@ class _AdminScreenState extends State<AdminScreen>
     if (events.isEmpty) {
       return Center(
         child: Text('Нет событий',
-            style: GoogleFonts.inter(color: AppColors.muted)),
+            style: GoogleFonts.inter(color: context.mutedColor)),
       );
     }
     return ListView.separated(
@@ -486,9 +488,9 @@ class _AdminScreenState extends State<AdminScreen>
           onTap: () => _showEventDetails(context, e, state),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.card,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border, width: 0.5),
+              border: Border.all(color: context.borderColor, width: 0.5),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
@@ -511,15 +513,15 @@ class _AdminScreenState extends State<AdminScreen>
                           style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
-                              color: AppColors.text),
+                              color: context.textColor),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                       Text(e.organizerName,
                           style: GoogleFonts.inter(
-                              fontSize: 11, color: AppColors.muted)),
+                              fontSize: 11, color: context.mutedColor)),
                       Text('${e.registered} / ${e.capacity} участников',
                           style: GoogleFonts.inter(
-                              fontSize: 11, color: AppColors.muted)),
+                              fontSize: 11, color: context.mutedColor)),
                     ],
                   ),
                 ),
@@ -557,9 +559,9 @@ class _AdminScreenState extends State<AdminScreen>
             final title = e.getTitle(lang);
             final date = DateFormat('dd MMM yyyy, HH:mm').format(e.eventDate);
             return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: ctx.cardColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               child: Column(
@@ -567,40 +569,40 @@ class _AdminScreenState extends State<AdminScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(child: Container(width: 40, height: 4,
-                      decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)))),
+                      decoration: BoxDecoration(color: ctx.borderColor, borderRadius: BorderRadius.circular(2)))),
                   const SizedBox(height: 16),
-                  Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.text)),
+                  Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: ctx.textColor)),
                   const SizedBox(height: 8),
                   Row(children: [
                     const Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.primary),
                     const SizedBox(width: 6),
-                    Text(date, style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                    Text(date, style: GoogleFonts.inter(fontSize: 13, color: ctx.mutedColor)),
                   ]),
                   const SizedBox(height: 4),
                   Row(children: [
                     const Icon(Icons.location_on_rounded, size: 13, color: AppColors.primary),
                     const SizedBox(width: 6),
-                    Text(e.getLocation(lang), style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                    Text(e.getLocation(lang), style: GoogleFonts.inter(fontSize: 13, color: ctx.mutedColor)),
                   ]),
                   const SizedBox(height: 4),
                   Row(children: [
                     const Icon(Icons.person_rounded, size: 13, color: AppColors.primary),
                     const SizedBox(width: 6),
-                    Text('Организатор: ${e.organizerName}', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                    Text('Организатор: \${e.organizerName}', style: GoogleFonts.inter(fontSize: 13, color: ctx.mutedColor)),
                   ]),
                   const SizedBox(height: 4),
                   Row(children: [
                     const Icon(Icons.people_rounded, size: 13, color: AppColors.primary),
                     const SizedBox(width: 6),
-                    Text('${e.registered} / ${e.capacity} участников', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                    Text('${e.registered} / ${e.capacity} участников', style: GoogleFonts.inter(fontSize: 13, color: ctx.mutedColor)),
                   ]),
                   const Divider(height: 24),
-                  Text('Участники', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.text)),
+                  Text('Участники', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: ctx.textColor)),
                   const SizedBox(height: 10),
                   loading
                       ? const Center(child: CircularProgressIndicator())
                       : participants.isEmpty
-                      ? Text('Нет зарегистрированных', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted))
+                      ? Text('Нет зарегистрированных', style: GoogleFonts.inter(fontSize: 13, color: ctx.mutedColor))
                       : SizedBox(
                     height: 220,
                     child: ListView.separated(
@@ -621,7 +623,7 @@ class _AdminScreenState extends State<AdminScreen>
                                 style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w700)),
                           ),
                           title: Text(name, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
-                          subtitle: Text(email, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                          subtitle: Text(email, style: GoogleFonts.inter(fontSize: 11, color: ctx.mutedColor)),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(

@@ -8,6 +8,7 @@ class AppState extends ChangeNotifier {
   String? token;
   String language = 'ru';
   bool isDarkMode = false;
+
   List<EventModel> events = [];
   List<dynamic> myRegistrations = [];
   List<dynamic> favorites = [];
@@ -30,7 +31,7 @@ class AppState extends ChangeNotifier {
       final savedLang = prefs.getString('language');
 
       if (savedLang != null) language = savedLang;
-      isDarkMode = prefs.getBool('dark_mode') ?? false;
+      // Тема не восстанавливается — всегда светлая при старте/входе
 
       if (savedToken != null &&
           savedEmail != null &&
@@ -76,7 +77,7 @@ class AppState extends ChangeNotifier {
       await prefs.setString('user_role', user!.role);
     }
     await prefs.setString('language', language);
-    await prefs.setBool('dark_mode', isDarkMode);
+    // dark_mode не сохраняем — тема не персистентна
   }
 
   Future<void> _clearSession() async {
@@ -86,6 +87,7 @@ class AppState extends ChangeNotifier {
     await prefs.remove('user_email');
     await prefs.remove('user_name');
     await prefs.remove('user_role');
+    await prefs.remove('dark_mode');
   }
 
   // ─── AUTH ─────────────────────────────────────────────────────────────────
@@ -104,6 +106,7 @@ class AppState extends ChangeNotifier {
   void logout() {
     user = null;
     token = null;
+    isDarkMode = false;
     myRegistrations = [];
     favorites = [];
     notifications = [];

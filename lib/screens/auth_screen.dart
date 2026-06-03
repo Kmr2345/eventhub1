@@ -178,7 +178,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 // Form card
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cCard,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha:0.15), blurRadius: 40, offset: const Offset(0, 8))],
                   ),

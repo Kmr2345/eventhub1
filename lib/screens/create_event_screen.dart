@@ -70,7 +70,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 8),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: context.borderColor, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
@@ -221,10 +221,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }[lang]!;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: context.bgColor,
       appBar: AppBar(
         title: Text(T['title']!, style: GoogleFonts.inter(fontWeight: FontWeight.w800)),
-        backgroundColor: AppColors.card,
+        backgroundColor: context.cardColor,
         leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.pop(context)),
         actions: [
           TextButton(
@@ -339,23 +339,23 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             ),
             const SizedBox(height: 16),
 
-            _sectionCard(T['name']!, [
-              _field('${T['name']!} (Русский)', _titleRu, 'Название на русском'),
-              _field('${T['name']!} (Қазақша)', _titleKz, 'Атауы қазақша'),
-              _field('${T['name']!} (English)', _titleEn, 'Title in English'),
+            _sectionCard(context, T['name']!, [
+              _field(context, '${T['name']!} (Русский)', _titleRu, 'Название на русском'),
+              _field(context, '${T['name']!} (Қазақша)', _titleKz, 'Атауы қазақша'),
+              _field(context, '${T['name']!} (English)', _titleEn, 'Title in English'),
             ]),
 
             Row(children: [
-              Expanded(child: _field(T['date']!, _date, lang == 'ru' ? '25 марта 2025' : lang == 'kz' ? '25 наурыз 2025' : '25 Mar 2025', readOnly: true, onTap: () => _pickDate(lang))),
+              Expanded(child: _field(context, T['date']!, _date, lang == 'ru' ? '25 марта 2025' : lang == 'kz' ? '25 наурыз 2025' : '25 Mar 2025', readOnly: true, onTap: () => _pickDate(lang))),
               const SizedBox(width: 10),
-              Expanded(child: _field(T['time']!, _time, '14:00', readOnly: true, onTap: () => _pickTime(lang))),
+              Expanded(child: _field(context, T['time']!, _time, '14:00', readOnly: true, onTap: () => _pickTime(lang))),
             ]),
             const SizedBox(height: 14),
 
-            _sectionCard(T['location']!, [
-              _field('${T['location']!} (Русский)', _locRu, 'С 1.2.366'),
-              _field('${T['location']!} (Қазақша)', _locKz, 'С 1.2.366'),
-              _field('${T['location']!} (English)', _locEn, 'С 1.2.366'),
+            _sectionCard(context, T['location']!, [
+              _field(context, '${T['location']!} (Русский)', _locRu, 'С 1.2.366'),
+              _field(context, '${T['location']!} (Қазақша)', _locKz, 'С 1.2.366'),
+              _field(context, '${T['location']!} (English)', _locEn, 'С 1.2.366'),
             ]),
 
             Row(
@@ -366,15 +366,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _label(T['cat']!),
+                      _label(context, T['cat']!),
                       Container(
-                        decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border, width: 0.5)),
+                        decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.borderColor, width: 0.5)),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: _category,
                             isExpanded: true,
-                            style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+                            style: GoogleFonts.inter(fontSize: 14, color: context.textColor),
                             items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                             onChanged: (v) => setState(() => _category = v!),
                           ),
@@ -384,15 +384,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Expanded(child: _field(T['cap']!, _capacity, '50', inputType: TextInputType.number)),
+                Expanded(child: _field(context, T['cap']!, _capacity, '50', inputType: TextInputType.number)),
               ],
             ),
             const SizedBox(height: 14),
 
-            _sectionCard(T['desc']!, [
-              _field('${T['desc']!} (Русский)', _descRu, 'Описание на русском...', maxLines: 3),
-              _field('${T['desc']!} (Қазақша)', _descKz, 'Сипаттама...', maxLines: 2),
-              _field('${T['desc']!} (English)', _descEn, 'Description...', maxLines: 2),
+            _sectionCard(context, T['desc']!, [
+              _field(context, '${T['desc']!} (Русский)', _descRu, 'Описание на русском...', maxLines: 3),
+              _field(context, '${T['desc']!} (Қазақша)', _descKz, 'Сипаттама...', maxLines: 2),
+              _field(context, '${T['desc']!} (English)', _descEn, 'Description...', maxLines: 2),
             ]),
 
             const SizedBox(height: 8),
@@ -412,10 +412,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _sectionCard(String title, List<Widget> children) => Container(
+  Widget _sectionCard(BuildContext context, String title, List<Widget> children) => Container(
     margin: const EdgeInsets.only(bottom: 14),
     padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border, width: 0.5)),
+    decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: context.borderColor, width: 0.5)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(title.toUpperCase(), style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary, letterSpacing: 0.6)),
       const SizedBox(height: 10),
@@ -423,12 +423,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     ]),
   );
 
-  Widget _label(String text) => Padding(
+  Widget _label(BuildContext context, String text) => Padding(
     padding: const EdgeInsets.only(bottom: 5),
-    child: Text(text, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
+    child: Text(text, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: context.mutedColor)),
   );
 
   Widget _field(
+      BuildContext context,
       String label,
       TextEditingController ctrl,
       String hint, {
@@ -441,20 +442,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _label(label),
+        _label(context, label),
         TextField(
           controller: ctrl,
           maxLines: maxLines,
           keyboardType: inputType,
           readOnly: readOnly,
           onTap: onTap,
-          style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+          style: GoogleFonts.inter(fontSize: 14, color: context.textColor),
           decoration: InputDecoration(
-            hintText: hint, hintStyle: GoogleFonts.inter(color: AppColors.muted),
-            filled: true, fillColor: AppColors.bg,
+            hintText: hint, hintStyle: GoogleFonts.inter(color: context.mutedColor),
+            filled: true, fillColor: context.bgColor,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border, width: 0.5)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.borderColor, width: 0.5)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.borderColor, width: 0.5)),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
           ),
         ),
