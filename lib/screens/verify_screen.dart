@@ -60,7 +60,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
   Future<void> _verify() async {
     if (_code.length < 6) {
-      showSnack(context, _t('enterAllDigits'));
+      showSnack(context, _t('enterAllDigits'), isError: true);
       return;
     }
     setState(() => _verifying = true);
@@ -96,8 +96,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showSnack(context, e.toString().replaceFirst('Exception: ', ''));
-        // Очищаем поля при ошибке
+        showSnack(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
         for (final c in _ctrls) c.clear();
         _nodes[0].requestFocus();
       }
@@ -118,7 +117,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
         _nodes[0].requestFocus();
       }
     } catch (e) {
-      if (mounted) showSnack(context, e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) showSnack(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     } finally {
       if (mounted) setState(() => _resending = false);
     }
