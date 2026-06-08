@@ -26,8 +26,12 @@ router.post("/", auth, async (req, res) => {
       for (const u of users) {
         await createNotification(
           u._id,
-          "Новое мероприятие",
-          event.title,
+          { ru: "Новое мероприятие", kz: "Жаңа іс-шара", en: "New Event" },
+          {
+            ru: event.titleRu || event.title,
+            kz: event.titleKz || event.title,
+            en: event.title
+          },
           { type: "newEvent", eventId: event._id }
         );
       }
@@ -121,8 +125,12 @@ router.delete("/:id", auth, async (req, res) => {
       for (const r of regs) {
         await createNotification(
           r.userId,
-          "Мероприятие отменено",
-          `«${event.title}» было отменено организатором`,
+          { ru: "Мероприятие отменено", kz: "Іс-шара тоқтатылды", en: "Event Cancelled" },
+          {
+            ru: `«${event.titleRu || event.title}» было отменено организатором`,
+            kz: `«${event.titleKz || event.title}» ұйымдастырушымен тоқтатылды`,
+            en: `«${event.title}» was cancelled by the organizer`
+          },
           { type: "eventCancelled", eventId: req.params.id }
         );
       }

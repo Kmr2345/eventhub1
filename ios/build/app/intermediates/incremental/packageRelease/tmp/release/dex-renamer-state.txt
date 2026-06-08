@@ -1,0 +1,4 @@
+#Thu Jun 04 15:17:28 QYZT 2026
+base.0=C\:\\Users\\admin\\diploma\\build\\app\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex

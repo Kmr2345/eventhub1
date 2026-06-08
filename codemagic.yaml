@@ -1,0 +1,30 @@
+workflows:
+  ios-simulator:
+    name: iOS Simulator Build
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Regenerate iOS folder
+        script: |
+          rm -rf ios
+          flutter create --platforms=ios .
+          flutter pub get
+      - name: Pod install
+        script: |
+          cd ios
+          pod install --repo-update
+          cd ..
+      - name: Build iOS Simulator
+        script: |
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+    artifacts:
+      - build/ios/Debug-iphonesimulator/Runner.app

@@ -1,0 +1,36 @@
+[33m7eedcc1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m switch to resend email
+[33ma37c6ff[m update production url
+[33m08726d3[m prepare for deploy
+[33maeb3654[m updatde
+[33m860bfec[m fix CSV downloader with platform-specific implementation
+[33m7d398a4[m qr
+[33mc5413ab[m added qr and csv downloading, and admin profile
+[33md125336[m Allow admin to create events
+[33m15ea340[m Allow admin to create events
+[33madbab93[m Add admin role, fix server.js, update navigation
+[33m6df4b5f[m Merge pull request #2 from Kmr2345/cursor/2026-04-24-1kxv-c1eb9
+[33m8f34355[m[33m ([m[1;31morigin/cursor/2026-04-24-1kxv-c1eb9[m[33m)[m label registeоr
+[33m6b62e8a[m Add CORS and MongoDB Atlas connection
+[33m682b488[m Merge pull request #1 from Kmr2345/cursor/2026-04-24-1kxv-c1eb9
+[33m94355cb[m Update package-lock.json and .package-lock.json to include node-cron version 4.2.1
+[33m237c39a[m Enhance event loading and navigation: Update EventDetailScreen to support event loading by ID or model, improve caching and API retrieval logic, and modify NotificationsScreen to navigate with event ID on notification tap. Add new API service methods for event fetching and notification management.
+[33m41ca6e3[m Refactor EventDetailScreen to support loading events by ID or passed event model. Enhance event loading logic with caching and API retrieval. Update event model to improve organizer data handling. Modify NotificationsScreen to navigate to EventDetailScreen with event ID on notification tap. Add API service methods for marking notifications as read and fetching events by ID.
+[33md4e48d3[m Refactor event date handling across multiple screens: replace string date and time representations with DateTime objects. Update event detail, home, and event card screens to format and display event dates consistently. Enhance create event screen to allow date and time selection with proper formatting. Update event model to support new eventDate field and improve legacy date parsing.
+[33m1239477[m Refactor NotificationsScreen to use StatefulWidget for improved notification handling. Implement automatic refresh of notifications on initialization and enhance notification display logic with a ListView. Update main screen to show unread notification count in the app bar. Add methods for fetching and marking notifications as read in AppState. Enhance API service for notifications retrieval and marking all as read.
+[33mfbb3c2f[m Remove unused badges from profile screen and delete mock data file to streamline codebase.
+[33m6d88d0d[m Refactor API response handling: replace _decodeMap with _decodeAny for improved error handling and response validation. Enhance error messages for user registration in auth screen and add localization for "User already exists" error. Remove mock data file.
+[33m9675e59[m Enhance role validation in authentication: add backend role check and display error message for incorrect role selection. Update localization for role error messages. Remove mock data file.
+[33m70acbe8[m Refactor favorite button visibility: hide for organizers across event detail, favorites, search, and home screens. Remove mock data file.
+[33m368baab[m Implement profile screen updates: add post-frame callback to refresh registrations on init, update attended events display logic, and enhance localization for empty history messages. Remove mock data and refactor notifications screen to show no notifications message.
+[33mcb25188[m syncing favorites
+[33m21d06dc[m password and email
+[33mee84368[m Enhance authentication error handling and localization in auth screen.
+[33mcd07bf1[m label registeоr
+[33mf996ffb[m label register
+[33m313f414[m ff event registration
+[33m6c4eb72[m final fixing evet regist
+[33m5246691[m fixing event registration
+[33md9c94f4[m aft adding registratio
+[33mda574fa[m aft adding registration
+[33m2f6fd70[m after language changes
+[33m61bcb93[m first commit

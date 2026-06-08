@@ -21,7 +21,7 @@ function isValidEmail(email) {
   return true;
 }
 
-// REGISTER — создаёт аккаунт и отправляет код
+// REGISTER
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -41,10 +41,9 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const code = generateCode();
-    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 минут
+    const expires = new Date(Date.now() + 10 * 60 * 1000);
 
     if (existingUser && !existingUser.isVerified) {
-      // Обновляем код если уже регистрировался но не подтвердил
       existingUser.name = name;
       existingUser.password = hashedPassword;
       existingUser.verifyCode = code;
@@ -63,7 +62,6 @@ router.post("/register", async (req, res) => {
     }
 
     await sendVerificationEmail(email, code);
-
     res.json({ message: "Code sent", email });
   } catch (err) {
     console.error("REGISTER ERROR:", err);
@@ -71,7 +69,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// VERIFY — проверяет код и активирует аккаунт
+// VERIFY
 router.post("/verify", async (req, res) => {
   try {
     const { email, code } = req.body;
@@ -107,14 +105,17 @@ router.post("/verify", async (req, res) => {
     delete userObj.verifyCode;
     delete userObj.verifyCodeExpires;
 
-    // Уведомляем всех админов о новом пользователе
     try {
       const admins = await User.find({ role: "admin" }).select("_id");
       for (const admin of admins) {
         await createNotification(
           admin._id,
-          "Новый пользователь",
-          `${user.name} зарегистрировался на платформе`,
+          { ru: "Новый пользователь", kz: "Жаңа пайдаланушы", en: "New user" },
+          {
+            ru: `${user.name} зарегистрировался на платформе`,
+            kz: `${user.name} платформада тіркелді`,
+            en: `${user.name} registered on the platform`,
+          },
           { type: "newUser", userId: user._id.toString() }
         );
       }
@@ -128,7 +129,7 @@ router.post("/verify", async (req, res) => {
   }
 });
 
-// RESEND — повторная отправка кода
+// RESEND
 router.post("/resend-code", async (req, res) => {
   try {
     const { email } = req.body;

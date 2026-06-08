@@ -11,7 +11,11 @@ const Registration = require("./models/Registration");
 const createNotification = require("./utils/createNotification");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json());
 
 // Static files for uploads
@@ -102,8 +106,12 @@ cron.schedule("0 * * * *", async () => {
         for (const r of regs) {
           await createNotification(
             r.userId,
-            "Напоминание",
-            `Завтра: ${event.title}`,
+            { ru: "Напоминание", kz: "Еске салу", en: "Reminder" },
+            {
+              ru: `Завтра: ${event.titleRu || event.title}`,
+              kz: `Ертең: ${event.titleKz || event.title}`,
+              en: `Tomorrow: ${event.title}`,
+            },
             { type: "reminder1d", eventId: event._id, day }
           );
         }
@@ -115,7 +123,7 @@ cron.schedule("0 * * * *", async () => {
 });
 
 app.get("/", (req, res) => {
-  res.send("API running");
+  res.send("API running");res.send("API running");
 });
 
 app.listen(process.env.PORT || 5000, () => {

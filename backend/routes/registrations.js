@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Registration = require("../models/Registration");
 const Event = require("../models/Event");
+const User = require("../models/User");
 const auth = require("../middleware/auth");
 const createNotification = require("../utils/createNotification");
 
@@ -22,7 +23,6 @@ router.post("/", auth, async (req, res) => {
 
     const eventObjectId = new mongoose.Types.ObjectId(eventId);
 
-    // Нельзя регистрироваться после даты события
     const event = await Event.findById(eventObjectId);
     if (!event) return res.status(404).json("Event not found");
 
@@ -62,12 +62,17 @@ router.post("/", auth, async (req, res) => {
 
     // Уведомляем организатора о новой регистрации
     try {
-      const event = await Event.findById(eventObjectId);
+      const student = await User.findById(req.user.id).select("name");
+      const studentName = student?.name ?? "Студент";
       if (event && event.organizerId) {
         await createNotification(
           event.organizerId,
-          "Новая регистрация",
-          `Студент зарегистрировался на «${event.title}»`,
+          { ru: "Новая регистрация", kz: "Жаңа тіркелу", en: "New Registration" },
+          {
+            ru: `${studentName} зарегистрировался на «${event.titleRu || event.title}»`,
+            kz: `${studentName} «${event.titleKz || event.title}» іс-шарасына тіркелді`,
+            en: `${studentName} registered for «${event.title}»`,
+          },
           { type: "newRegistration", eventId: eventObjectId.toString() }
         );
       }
@@ -116,12 +121,18 @@ router.put("/:id/cancel", auth, async (req, res) => {
 
     // Уведомляем организатора об отмене
     try {
+      const student = await User.findById(registration.userId).select("name");
+      const studentName = student?.name ?? "Студент";
       const event = await Event.findById(registration.eventId);
       if (event && event.organizerId) {
         await createNotification(
           event.organizerId,
-          "Отмена регистрации",
-          `Студент отменил регистрацию на «${event.title}»`,
+          { ru: "Отмена регистрации", kz: "Тіркелуді болдырмау", en: "Registration Cancelled" },
+          {
+            ru: `${studentName} отменил регистрацию на «${event.titleRu || event.title}»`,
+            kz: `${studentName} «${event.titleKz || event.title}» іс-шарасынан тіркелуін болдырмады`,
+            en: `${studentName} cancelled registration for «${event.title}»`,
+          },
           { type: "cancelRegistration", eventId: registration.eventId.toString() }
         );
       }
@@ -145,7 +156,6 @@ router.put("/:id/attended", auth, async (req, res) => {
       return res.status(403).json("Only organizer or admin can mark attendance");
     }
 
-    // Сканирование только в день события или после
     const event = registration.eventId;
     if (event && event.eventDate) {
       const eventDay = new Date(event.eventDate);
@@ -169,11 +179,17 @@ router.put("/:id/attended", auth, async (req, res) => {
     // Уведомление студенту — оцените мероприятие
     try {
       const eventTitle = event?.title ?? "мероприятие";
+      const eventTitleRu = event?.titleRu || eventTitle;
+      const eventTitleKz = event?.titleKz || eventTitle;
       const eventId = event?._id ?? registration.eventId;
       await createNotification(
         registration.userId,
-        "Оцените мероприятие",
-        `Вы посетили «${eventTitle}». Оставьте оценку и отзыв!`,
+        { ru: "Оцените мероприятие", kz: "Іс-шараны бағалаңыз", en: "Rate the Event" },
+        {
+          ru: `Вы посетили «${eventTitleRu}». Оставьте оценку и отзыв!`,
+          kz: `Сіз «${eventTitleKz}» іс-шарасына қатыстыңыз. Баға қалдырыңыз!`,
+          en: `You attended «${eventTitle}». Leave a rating and review!`,
+        },
         { type: "reviewRequest", eventId: eventId.toString() }
       );
     } catch (notifyErr) {
