@@ -51,7 +51,7 @@ router.post("/", auth, async (req, res) => {
 
     await review.save();
 
-    // ✅ Пересчитываем рейтинг в Event
+    // Пересчитываем рейтинг в Event
     const allReviews = await Review.find({ eventId });
     const avg = allReviews.length
       ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
@@ -61,17 +61,23 @@ router.post("/", auth, async (req, res) => {
       reviewCount: allReviews.length,
     });
 
-
-    // Уведомляем организатора
     // Уведомляем организатора и всех админов
     try {
       const event = await Event.findById(eventId);
       if (event && event.organizerId) {
+        const titleRu = event.titleRu || event.title;
+        const titleKz = event.titleKz || event.title;
+        const titleEn = event.title;
+
         // Организатору
         await createNotification(
           event.organizerId,
-          "Новый отзыв",
-          `Студент оставил отзыв на "${event.title}"`,
+          { ru: "Новый отзыв", kz: "Жаңа пікір", en: "New Review" },
+          {
+            ru: `Студент оставил отзыв на «${titleRu}»`,
+            kz: `Студент «${titleKz}» іс-шарасына пікір қалдырды`,
+            en: `A student left a review for «${titleEn}»`,
+          },
           { type: "newReview", eventId: event._id.toString(), reviewerId: req.user.id }
         );
 
@@ -82,8 +88,12 @@ router.post("/", auth, async (req, res) => {
           if (admin._id.toString() === event.organizerId.toString()) continue;
           await createNotification(
             admin._id,
-            "Новый отзыв",
-            `Студент оставил отзыв на "${event.title}"`,
+            { ru: "Новый отзыв", kz: "Жаңа пікір", en: "New Review" },
+            {
+              ru: `Студент оставил отзыв на «${titleRu}»`,
+              kz: `Студент «${titleKz}» іс-шарасына пікір қалдырды`,
+              en: `A student left a review for «${titleEn}»`,
+            },
             { type: "newReview", eventId: event._id.toString(), reviewerId: req.user.id }
           );
         }
@@ -109,7 +119,6 @@ router.get("/event/:eventId", async (req, res) => {
       .populate("userId", "name")
       .sort({ createdAt: -1 });
 
-    // Считаем среднюю оценку
     const avg = reviews.length
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;

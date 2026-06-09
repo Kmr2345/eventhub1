@@ -75,6 +75,12 @@ class OrganizerScreen extends StatelessWidget {
       },
     }[lang]!;
 
+    final isDark = state.isDarkMode;
+    final cText  = isDark ? AppColors.darkText  : AppColors.text;
+    final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
+    final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
+    final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -85,7 +91,7 @@ class OrganizerScreen extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppColors.text,
+                color: cText,
               ),
             ),
           ),
@@ -97,13 +103,16 @@ class OrganizerScreen extends StatelessWidget {
             child: Row(
               children: [
                 _statCard(events.length.toString(), T['events']!,
-                    Icons.event_rounded, AppColors.primary),
+                    Icons.event_rounded, AppColors.primary,
+                    textColor: cText, mutedColor: cMuted),
                 const SizedBox(width: 10),
                 _statCard(totalParticipants.toString(), T['participants']!,
-                    Icons.people_rounded, AppColors.secondary),
+                    Icons.people_rounded, AppColors.secondary,
+                    textColor: cText, mutedColor: cMuted),
                 const SizedBox(width: 10),
                 _statCard(weightedAvgRating.toStringAsFixed(1), T['rating']!,
-                    Icons.star_rounded, AppColors.warning),
+                    Icons.star_rounded, AppColors.warning,
+                    textColor: cText, mutedColor: cMuted),
               ],
             ),
           ),
@@ -121,11 +130,11 @@ class OrganizerScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.muted)),
+                        color: cMuted)),
                 const SizedBox(height: 8),
                 Text(T['create']!,
                     style: GoogleFonts.inter(
-                        fontSize: 13, color: AppColors.muted)),
+                        fontSize: 13, color: cMuted)),
               ],
             ),
           ),
@@ -149,7 +158,8 @@ class OrganizerScreen extends StatelessWidget {
   }
 
   Widget _statCard(
-      String value, String label, IconData icon, Color color) =>
+      String value, String label, IconData icon, Color color, {
+        required Color textColor, required Color mutedColor}) =>
       Expanded(
         child: Container(
           padding: const EdgeInsets.all(14),
@@ -165,13 +175,13 @@ class OrganizerScreen extends StatelessWidget {
                   style: GoogleFonts.inter(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.text)),
+                      color: textColor)),
               Text(label,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.muted)),
+                      color: mutedColor)),
             ],
           ),
         ),
@@ -207,9 +217,9 @@ class _OrganizerEventCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border, width: 0.5),
+        border: Border.all(color: context.borderColor, width: 0.5),
       ),
       child: Column(
         children: [
@@ -351,7 +361,7 @@ class _OrganizerEventCard extends StatelessWidget {
                     Text(
                       '${event.registered}/${event.capacity} ${labels['registered']}',
                       style: GoogleFonts.inter(
-                          fontSize: 12, color: AppColors.muted),
+                          fontSize: 12, color: context.mutedColor),
                     ),
                   ],
                 ),

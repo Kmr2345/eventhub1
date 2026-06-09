@@ -91,7 +91,7 @@ cron.schedule("0 * * * *", async () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const day = createNotification.dayKey(tomorrow);
 
-    const events = await Event.find({ eventDate: { $ne: null } }).select("_id title eventDate");
+    const events = await Event.find({ eventDate: { $ne: null } }).select("_id title eventDate titleRu titleKz");
 
     for (const event of events) {
       const eventDate = new Date(event.eventDate);
@@ -123,7 +123,7 @@ cron.schedule("0 * * * *", async () => {
 });
 
 app.get("/", (req, res) => {
-  res.send("API running");res.send("API running");
+  res.send("API running");
 });
 
 app.listen(process.env.PORT || 5000, () => {

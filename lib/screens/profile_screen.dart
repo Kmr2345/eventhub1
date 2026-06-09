@@ -30,7 +30,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final lang = state.language;
-    final user = state.user!;
+    final user = state.user;
+    if (user == null) return const SizedBox.shrink();
 
     final Map<String, String> T = {
       'ru': {
@@ -91,7 +92,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final cBg     = isDark ? AppColors.darkBg     : AppColors.bg;
     final cMuted  = isDark ? AppColors.darkMuted  : AppColors.muted;
     final cBorder = isDark ? AppColors.darkBorder : AppColors.border;
-    final cSurface= isDark ? AppColors.darkSurface: AppColors.bg;
 
     String roleLabel() {
       if (user.role == 'admin') {

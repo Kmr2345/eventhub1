@@ -181,7 +181,8 @@ class _MainScreenState extends State<MainScreen> {
         Container(
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
-              color: AppColors.bg, borderRadius: BorderRadius.circular(10)),
+              color: isDark ? AppColors.darkSurface : AppColors.bg,
+              borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -201,7 +202,7 @@ class _MainScreenState extends State<MainScreen> {
                       style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: active ? Colors.white : AppColors.muted)),
+                          color: active ? Colors.white : cMuted)),
                 ),
               );
             }).toList(),
@@ -344,7 +345,7 @@ class _MainScreenState extends State<MainScreen> {
                               : item['icon'] as IconData,
                           size: 24,
                           color:
-                          active ? AppColors.primary : AppColors.muted),
+                          active ? AppColors.primary : cMuted),
                       const SizedBox(height: 3),
                       Text(item['label'] as String,
                           style: GoogleFonts.inter(
@@ -352,7 +353,7 @@ class _MainScreenState extends State<MainScreen> {
                               fontWeight: FontWeight.w600,
                               color: active
                                   ? AppColors.primary
-                                  : AppColors.muted)),
+                                  : cMuted)),
                     ],
                   ),
                 ),
