@@ -18,39 +18,45 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Static files for uploads
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, "uploads");
-    require("fs").mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+// Cloudinary setup
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'eventhub',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 1200, quality: 85, crop: 'limit' }],
   },
 });
+
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-      if (
-        file.mimetype.startsWith("image/") ||
-        file.mimetype === "application/octet-stream" ||
-        /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname)
-      ) cb(null, true);
-      else cb(new Error("Only image files allowed"));
-    },
+    if (
+      file.mimetype.startsWith('image/') ||
+      file.mimetype === 'application/octet-stream' ||
+      /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname)
+    ) cb(null, true);
+    else cb(new Error('Only image files allowed'));
+  },
 });
 
 // UPLOAD IMAGE
-app.post("/upload", auth, upload.single("image"), (req, res) => {
-  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-  res.json({ url });
+app.post('/upload', auth, upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+  // Cloudinary возвращает готовый URL в req.file.path
+  res.json({ url: req.file.path });
 });
 
 // MongoDB

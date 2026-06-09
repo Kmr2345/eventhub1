@@ -145,6 +145,55 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       return;
     }
 
+    // Валидация локации — все 3 языка обязательны
+    final locRu = _locRu.text.trim();
+    final locKz = _locKz.text.trim();
+    final locEn = _locEn.text.trim();
+    if (locRu.isEmpty) {
+      showSnack(context, lang == 'ru' ? 'Укажите место проведения на русском' : lang == 'kz' ? 'Орынды орысша енгізіңіз' : 'Enter location in Russian', isError: true);
+      return;
+    }
+    if (locKz.isEmpty) {
+      showSnack(context, lang == 'ru' ? 'Укажите место проведения на казахском' : lang == 'kz' ? 'Орынды қазақша енгізіңіз' : 'Enter location in Kazakh', isError: true);
+      return;
+    }
+    if (locEn.isEmpty) {
+      showSnack(context, lang == 'ru' ? 'Укажите место проведения на английском' : lang == 'kz' ? 'Орынды ағылшынша енгізіңіз' : 'Enter location in English', isError: true);
+      return;
+    }
+
+    // Валидация описания — все 3 языка обязательны
+    final descRu = _descRu.text.trim();
+    final descKz = _descKz.text.trim();
+    final descEn = _descEn.text.trim();
+    if (descRu.isEmpty) {
+      showSnack(context, lang == 'ru' ? 'Добавьте описание на русском' : lang == 'kz' ? 'Сипаттаманы орысша енгізіңіз' : 'Add description in Russian', isError: true);
+      return;
+    }
+    if (descKz.isEmpty) {
+      showSnack(context, lang == 'ru' ? 'Добавьте описание на казахском' : lang == 'kz' ? 'Сипаттаманы қазақша енгізіңіз' : 'Add description in Kazakh', isError: true);
+      return;
+    }
+    if (descEn.isEmpty) {
+      showSnack(context, lang == 'ru' ? 'Добавьте описание на английском' : lang == 'kz' ? 'Сипаттаманы ағылшынша енгізіңіз' : 'Add description in English', isError: true);
+      return;
+    }
+
+    // Валидация вместимости
+    final cap = int.tryParse(_capacity.text.trim());
+    if (cap == null || cap < 1) {
+      showSnack(
+        context,
+        lang == 'ru'
+            ? 'Укажите корректное количество мест (минимум 1)'
+            : lang == 'kz'
+            ? 'Орын санын дұрыс енгізіңіз (кемінде 1)'
+            : 'Enter a valid capacity (minimum 1)',
+        isError: true,
+      );
+      return;
+    }
+
     final sd = _selectedDate;
     final st = _selectedTime;
     if (sd == null || st == null) {
@@ -160,22 +209,62 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       return;
     }
 
+    // Дата не в прошлом
     final eventDate = DateTime(sd.year, sd.month, sd.day, st.hour, st.minute);
+    if (eventDate.isBefore(DateTime.now())) {
+      showSnack(
+        context,
+        lang == 'ru'
+            ? 'Дата мероприятия не может быть в прошлом'
+            : lang == 'kz'
+            ? 'Іс-шара күні өткен болуы мүмкін емес'
+            : 'Event date cannot be in the past',
+        isError: true,
+      );
+      return;
+    }
+
+    // Проверка на дубликат (одинаковое название + дата + локация)
+    final editId = widget.editEvent?.id;
+    final isDuplicate = state.myEvents.any((e) {
+      if (editId != null && e.id == editId) return false; // при редактировании пропускаем себя
+      final sameTitle = e.titleRu.toLowerCase() == titleRu.toLowerCase();
+      final sameDate = e.eventDate.year == eventDate.year &&
+          e.eventDate.month == eventDate.month &&
+          e.eventDate.day == eventDate.day &&
+          e.eventDate.hour == eventDate.hour &&
+          e.eventDate.minute == eventDate.minute;
+      final sameLocation = e.locationRu.toLowerCase() == locRu.toLowerCase();
+      return sameTitle && sameDate && sameLocation;
+    });
+
+    if (isDuplicate) {
+      showSnack(
+        context,
+        lang == 'ru'
+            ? 'Мероприятие с таким названием, датой и местом уже существует'
+            : lang == 'kz'
+            ? 'Мұндай атаумен, күнмен және орынмен іс-шара бар'
+            : 'An event with the same title, date and location already exists',
+        isError: true,
+      );
+      return;
+    }
 
     final data = <String, dynamic>{
       'title': _titleEn.text.trim().isEmpty ? titleRu : _titleEn.text.trim(),
       'titleRu': titleRu,
       'titleKz': _titleKz.text.trim(),
-      'description': _descEn.text.trim(),
-      'descriptionRu': _descRu.text.trim(),
-      'descriptionKz': _descKz.text.trim(),
+      'description': descEn,
+      'descriptionRu': descRu,
+      'descriptionKz': descKz,
       'eventDate': eventDate.toIso8601String(),
-      'location': _locEn.text.trim(),
-      'locationRu': _locRu.text.trim(),
-      'locationKz': _locKz.text.trim(),
+      'location': locEn,
+      'locationRu': locRu,
+      'locationKz': locKz,
       'category': _category,
       'image': _uploadedImageUrl ?? (widget.editEvent?.image ?? _unsplash),
-      'capacity': int.tryParse(_capacity.text.trim()) ?? 50,
+      'capacity': cap,
     };
 
     try {
@@ -196,9 +285,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         if (!mounted) return;
         showSnack(context, getMessage("eventCreated", lang));
         widget.onCreated?.call();
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => EventDetailScreen(event: model)),
+              (route) => route.isFirst, // оставляем только MainScreen в стеке
         );
       }
     } catch (e) {
