@@ -48,21 +48,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
-      showSnack(context, _t('nameRequired'));
+      showSnack(context, _t('nameRequired'), isError: true);
       return;
     }
 
     if (_changePassword) {
       if (_currentPassCtrl.text.isEmpty) {
-        showSnack(context, _t('currentPassRequired'));
+        showSnack(context, _t('currentPassRequired'), isError: true);
         return;
       }
       if (_newPassCtrl.text.length < 6) {
-        showSnack(context, _t('passMinLength'));
+        showSnack(context, _t('passMinLength'), isError: true);
         return;
       }
       if (_newPassCtrl.text != _confirmPassCtrl.text) {
-        showSnack(context, _t('passMismatch'));
+        showSnack(context, _t('passMismatch'), isError: true);
         return;
       }
     }
@@ -91,7 +91,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Navigator.pop(context, true);
       }
     } catch (e) {
-      if (mounted) showSnack(context, e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) {
+        String msg = e.toString().replaceFirst('Exception: ', '');
+        if (msg.toLowerCase().contains('current password is incorrect') ||
+            msg.toLowerCase().contains('incorrect password') ||
+            msg.toLowerCase().contains('wrong password')) {
+          msg = _t('currentPassIncorrect');
+        }
+        showSnack(context, msg, isError: true);
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -113,6 +121,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'currentPassRequired': {'ru': 'Введите текущий пароль', 'kz': 'Ағымдағы құпия сөзді енгізіңіз', 'en': 'Enter current password'},
       'passMinLength': {'ru': 'Пароль минимум 6 символов', 'kz': 'Кем дегенде 6 таңба', 'en': 'Password must be at least 6 characters'},
       'passMismatch': {'ru': 'Пароли не совпадают', 'kz': 'Құпия сөздер сәйкес келмейді', 'en': 'Passwords do not match'},
+      'currentPassIncorrect': {'ru': 'Неверный текущий пароль', 'kz': 'Ағымдағы құпия сөз қате', 'en': 'Current password is incorrect'},
     };
     return map[key]?[lang] ?? map[key]?['ru'] ?? key;
   }
@@ -123,16 +132,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = state.user!;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor:  context.bgColor,
       appBar: AppBar(
-        backgroundColor: AppColors.card,
+        backgroundColor: context.cardColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.primary, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(_t('editProfile'),
-            style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.text)),
+            style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, color: context.textColor)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -180,30 +189,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: AppColors.card,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _changePassword ? AppColors.primary : AppColors.border,
+                    color: _changePassword ? AppColors.primary : context.borderColor,
                     width: _changePassword ? 1.5 : 0.5,
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.lock_outline_rounded,
-                        color: _changePassword ? AppColors.primary : AppColors.muted, size: 20),
+                        color: _changePassword ? AppColors.primary : context.mutedColor, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(_t('changePassword'),
                           style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: _changePassword ? AppColors.primary : AppColors.text)),
+                              color: _changePassword ? AppColors.primary : context.textColor)),
                     ),
                     AnimatedRotation(
                       turns: _changePassword ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
                       child: Icon(Icons.keyboard_arrow_down_rounded,
-                          color: _changePassword ? AppColors.primary : AppColors.muted),
+                          color: _changePassword ? AppColors.primary : context.mutedColor),
                     ),
                   ],
                 ),
@@ -285,14 +294,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 decoration: BoxDecoration(
-                  color: AppColors.card,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.border, width: 0.5),
+                  border: Border.all(color: context.borderColor, width: 0.5),
                 ),
                 child: Center(
                   child: Text(_t('cancel'),
                       style: GoogleFonts.inter(
-                          fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                          fontSize: 15, fontWeight: FontWeight.w600, color: context.mutedColor)),
                 ),
               ),
             ),
@@ -305,7 +314,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _label(String text) => Text(text,
       style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600,
-          color: AppColors.muted, letterSpacing: 0.4));
+          color: context.mutedColor, letterSpacing: 0.4));
 
   Widget _field({
     required TextEditingController controller,
@@ -317,20 +326,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return TextField(
       controller: controller,
       obscureText: obscure,
-      style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+      style: GoogleFonts.inter(fontSize: 14, color: context.textColor),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.inter(color: AppColors.muted, fontSize: 14),
+        hintStyle: GoogleFonts.inter(color: context.mutedColor, fontSize: 14),
         prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
         suffixIcon: toggleObscure != null
             ? IconButton(
           icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-              color: AppColors.muted, size: 20),
+              color: context.mutedColor, size: 20),
           onPressed: toggleObscure,
         )
             : null,
         filled: true,
-        fillColor: AppColors.card,
+        fillColor: context.cardColor,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

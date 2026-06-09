@@ -315,7 +315,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       appBar: AppBar(
         title: Text(T['title']!, style: GoogleFonts.inter(fontWeight: FontWeight.w800)),
         backgroundColor: context.cardColor,
-        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.pop(context)),
         actions: [
           TextButton(
             onPressed: () async => _submit(state, lang),

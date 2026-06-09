@@ -12,7 +12,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool _notificationsOn = true;
 
   @override
   void initState() {
@@ -38,9 +37,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'settings': 'Настройки',
         'language': 'Язык',
         'darkMode': 'Тёмный режим',
-        'notifications': 'Push-уведомления',
-        'on': 'Вкл',
-        'off': 'Выкл',
         'logout': 'Выйти',
         'attended': 'Посещено',
         'saved': 'Избранных',
@@ -53,9 +49,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'settings': 'Баптаулар',
         'language': 'Тіл',
         'darkMode': 'Күңгірт режим',
-        'notifications': 'Push-хабарламалар',
-        'on': 'Қосу',
-        'off': 'Өшіру',
         'logout': 'Шығу',
         'attended': 'Барды',
         'saved': 'Таңдаулы',
@@ -68,9 +61,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'settings': 'Settings',
         'language': 'Language',
         'darkMode': 'Dark Mode',
-        'notifications': 'Push Notifications',
-        'on': 'On',
-        'off': 'Off',
         'logout': 'Log Out',
         'attended': 'Attended',
         'saved': 'Saved',
@@ -628,65 +618,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           Divider(height: 0.5, color: cBorder),
 
-                          // Notifications
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Center(
-                                    child: Icon(Icons.notifications_outlined,
-                                        color: AppColors.primary, size: 18),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(T['notifications']!,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: cText,
-                                      )),
-                                ),
-                                GestureDetector(
-                                  onTap: () => setState(() =>
-                                  _notificationsOn = !_notificationsOn),
-                                  child: AnimatedContainer(
-                                    duration:
-                                    const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 14, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: _notificationsOn
-                                          ? AppColors.secondary
-                                          : Colors.grey.shade300,
-                                      borderRadius:
-                                      BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      _notificationsOn
-                                          ? T['on']!
-                                          : T['off']!,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Divider(height: 0.5, color: cBorder),
 
                           // Logout
                           InkWell(
