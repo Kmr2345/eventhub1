@@ -89,6 +89,9 @@ app.use("/reviews", reviewRoutes);
 const profileRoutes = require("./routes/profile");
 app.use("/profile", profileRoutes);
 
+const previewRoutes = require("./routes/preview");
+app.use("/preview", previewRoutes);
+
 // Reminder cron (1 day before)
 cron.schedule("0 * * * *", async () => {
   try {

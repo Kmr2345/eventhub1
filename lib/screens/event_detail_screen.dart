@@ -1024,7 +1024,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
     final event = _event;
     if (event == null) return;
-    final eventLink = '${ApiService.shareBaseUrl}/events/${event.id}';
+    final eventLink = '${ApiService.shareBaseUrl}/preview/events/${event.id}';
     final shareText = lang == 'ru' ? 'Смотри это мероприятие' : lang == 'kz' ? 'Осы іс-шараны қара' : 'Check out this event';
     final encodedText = Uri.encodeComponent('$shareText: ${event.title}\n$eventLink');
     final encodedTitle = Uri.encodeComponent(event.title);
