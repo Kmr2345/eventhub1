@@ -1,18 +1,11 @@
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendVerificationEmail(toEmail, code) {
-  await transporter.sendMail({
-    from: `"EventHub" <${process.env.GMAIL_USER}>`,
+  await resend.emails.send({
+    from: 'EventHub <onboarding@resend.dev>',
     to: toEmail,
-    subject: "EventHub — Код подтверждения",
+    subject: 'EventHub — Код подтверждения',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
         <h2 style="color: #6C63FF; margin-bottom: 8px;">EventHub</h2>
