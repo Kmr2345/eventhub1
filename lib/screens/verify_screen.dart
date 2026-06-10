@@ -189,8 +189,8 @@ class _VerifyScreenState extends State<VerifyScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(6, (i) {
                 return Container(
-                  width: 46, height: 56,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: 42, height: 52,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
                   decoration: BoxDecoration(
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(12),
