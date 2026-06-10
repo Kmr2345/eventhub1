@@ -20,25 +20,10 @@ class OrganizerScreen extends StatelessWidget {
     final lang = state.language;
     final events = state.myEvents;
 
-    final totalParticipants = events.fold(0, (s, e) => s + e.registered);
-
-    // Взвешенное среднее: учитываем количество отзывов у каждого события.
-    // Ивенты без отзывов не влияют на итоговый рейтинг.
-    final ratedEvents = events.where((e) => e.totalRatings > 0).toList();
-    final totalRatingsCount =
-    ratedEvents.fold(0, (s, e) => s + e.totalRatings);
-    final weightedAvgRating = totalRatingsCount == 0
-        ? 0.0
-        : ratedEvents.fold(
-        0.0, (s, e) => s + e.rating * e.totalRatings) /
-        totalRatingsCount;
-
     final T = {
       'ru': {
         'title': 'Мои мероприятия',
         'events': 'Событий',
-        'participants': 'Участников',
-        'rating': 'Рейтинг',
         'registered': 'зарег.',
         'edit': 'Редактировать',
         'delete': 'Удалить',
@@ -46,12 +31,11 @@ class OrganizerScreen extends StatelessWidget {
         'noEvents': 'Нет мероприятий',
         'create': 'Создайте первое мероприятие',
         'scan': 'Сканировать QR',
+        'noRating': 'Нет оценок',
       },
       'kz': {
         'title': 'Менің іс-шараларым',
         'events': 'Іс-шаралар',
-        'participants': 'Қатысушылар',
-        'rating': 'Рейтинг',
         'registered': 'тіркелді',
         'edit': 'Өңдеу',
         'delete': 'Жою',
@@ -59,12 +43,11 @@ class OrganizerScreen extends StatelessWidget {
         'noEvents': 'Іс-шара жоқ',
         'create': 'Алғашқы іс-шараны жасаңыз',
         'scan': 'QR сканерлеу',
+        'noRating': 'Бағалар жоқ',
       },
       'en': {
         'title': 'My Events',
         'events': 'Events',
-        'participants': 'Participants',
-        'rating': 'Rating',
         'registered': 'reg.',
         'edit': 'Edit',
         'delete': 'Delete',
@@ -72,6 +55,7 @@ class OrganizerScreen extends StatelessWidget {
         'noEvents': 'No Events Yet',
         'create': 'Create your first event',
         'scan': 'Scan QR',
+        'noRating': 'No ratings yet',
       },
     }[lang]!;
 
@@ -104,14 +88,6 @@ class OrganizerScreen extends StatelessWidget {
               children: [
                 _statCard(events.length.toString(), T['events']!,
                     Icons.event_rounded, AppColors.primary,
-                    textColor: cText, mutedColor: cMuted),
-                const SizedBox(width: 10),
-                _statCard(totalParticipants.toString(), T['participants']!,
-                    Icons.people_rounded, AppColors.secondary,
-                    textColor: cText, mutedColor: cMuted),
-                const SizedBox(width: 10),
-                _statCard(weightedAvgRating.toStringAsFixed(1), T['rating']!,
-                    Icons.star_rounded, AppColors.warning,
                     textColor: cText, mutedColor: cMuted),
               ],
             ),
@@ -366,6 +342,11 @@ class _OrganizerEventCard extends StatelessWidget {
                   ],
                 ),
 
+                const SizedBox(height: 10),
+
+                // Per-event rating
+                _EventRatingRow(event: event, labels: labels),
+
                 const SizedBox(height: 12),
 
                 // Scan QR
@@ -508,4 +489,64 @@ class _OrganizerEventCard extends StatelessWidget {
         'Seminar': '📚',
       }[cat] ??
           '🎯';
+}
+
+class _EventRatingRow extends StatelessWidget {
+  final EventModel event;
+  final Map<String, String> labels;
+
+  const _EventRatingRow({required this.event, required this.labels});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasRating = event.totalRatings > 0;
+
+    if (!hasRating) {
+      return Row(
+        children: [
+          Icon(Icons.star_outline_rounded, size: 14, color: context.mutedColor),
+          const SizedBox(width: 4),
+          Text(
+            labels['noRating']!,
+            style: GoogleFonts.inter(fontSize: 12, color: context.mutedColor),
+          ),
+        ],
+      );
+    }
+
+    // Build star row: filled, half, empty
+    final rating = event.rating.clamp(0.0, 5.0);
+    final fullStars = rating.floor();
+    final hasHalf = (rating - fullStars) >= 0.4;
+
+    return Row(
+      children: [
+        // Stars
+        for (int i = 0; i < 5; i++)
+          Icon(
+            i < fullStars
+                ? Icons.star_rounded
+                : (i == fullStars && hasHalf)
+                ? Icons.star_half_rounded
+                : Icons.star_outline_rounded,
+            size: 16,
+            color: AppColors.warning,
+          ),
+        const SizedBox(width: 6),
+        Text(
+          rating.toStringAsFixed(1),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.warning,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '(${event.totalRatings})',
+          style: GoogleFonts.inter(fontSize: 11, color: context.mutedColor),
+        ),
+      ],
+    );
+  }
 }

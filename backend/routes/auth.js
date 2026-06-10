@@ -24,7 +24,7 @@ function isValidEmail(email) {
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, lang } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields required" });
@@ -61,7 +61,7 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    await sendVerificationEmail(email, code);
+    await sendVerificationEmail(email, code, lang || 'ru');
     res.json({ message: "Code sent", email });
   } catch (err) {
     console.error("REGISTER ERROR:", err);
@@ -132,7 +132,7 @@ router.post("/verify", async (req, res) => {
 // RESEND
 router.post("/resend-code", async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, lang } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -143,7 +143,7 @@ router.post("/resend-code", async (req, res) => {
     user.verifyCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
-    await sendVerificationEmail(email, code);
+    await sendVerificationEmail(email, code, lang || 'ru');
     res.json({ message: "Code resent" });
   } catch (err) {
     res.status(500).json({ error: err.message });

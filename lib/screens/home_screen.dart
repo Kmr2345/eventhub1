@@ -101,7 +101,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     double popularityScore(EventModel e) {
-      return e.registered.toDouble();
+      // fillPercent = registered / capacity (0.0 – 1.0)
+      // rating нормализуем к 0–1 (max 5 звёзд)
+      // Вес: 60% заполненность + 40% рейтинг
+      final fill = e.fillPercent.clamp(0.0, 1.0);
+      final rating = (e.rating / 5.0).clamp(0.0, 1.0);
+      return fill * 0.6 + rating * 0.4;
     }
 
     // Trending: топ-3 по популярности среди ещё не прошедших событий
