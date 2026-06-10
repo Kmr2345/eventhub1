@@ -207,7 +207,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         _canReview = false;
         _alreadyReviewed = true;
       });
-      if (mounted) showSnack(context, 'Отзыв успешно отправлен!');
+      if (mounted) {
+        final lang = context.read<AppState>().language;
+        final msg = lang == 'ru' ? 'Отзыв успешно отправлен!' : lang == 'kz' ? 'Пікір сәтті жіберілді!' : 'Review submitted!';
+        showSnack(context, msg);
+      }
     } catch (err) {
       setState(() => _submittingReview = false);
       if (mounted) showSnack(context, err.toString(), isError: true);
@@ -1012,6 +1016,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   void _showShareSheet(BuildContext context) {
     final state = context.read<AppState>();
     final isDark = state.isDarkMode;
+    final lang   = state.language;
     final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
     final cCard  = isDark ? AppColors.darkCard  : AppColors.card;
     final cText  = isDark ? AppColors.darkText  : AppColors.text;
@@ -1019,10 +1024,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
     final event = _event;
     if (event == null) return;
-    // shareBaseUrl — реальный IP сервера, ссылка откроется у получателя в WhatsApp/Telegram
     final eventLink = '${ApiService.shareBaseUrl}/events/${event.id}';
-    final encodedText = Uri.encodeComponent('Смотри это мероприятие: ${event.title}\n$eventLink');
+    final shareText = lang == 'ru' ? 'Смотри это мероприятие' : lang == 'kz' ? 'Осы іс-шараны қара' : 'Check out this event';
+    final encodedText = Uri.encodeComponent('$shareText: ${event.title}\n$eventLink');
     final encodedTitle = Uri.encodeComponent(event.title);
+    final shareLabel = lang == 'ru' ? 'Поделиться' : lang == 'kz' ? 'Бөлісу' : 'Share';
+    final copyLabel = lang == 'ru' ? 'Копировать' : lang == 'kz' ? 'Көшіру' : 'Copy';
+    final copiedMsg = lang == 'ru' ? 'Ссылка скопирована!' : lang == 'kz' ? 'Сілтеме көшірілді!' : 'Link copied!';
 
     showModalBottomSheet(
       context: context,
@@ -1060,7 +1068,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Поделиться', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: cText)),
+                    Text(shareLabel, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: cText)),
                     Text(event.title, style: GoogleFonts.inter(fontSize: 12, color: cMuted), overflow: TextOverflow.ellipsis),
                   ],
                 ),
@@ -1097,12 +1105,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 _ShareButton(
                   gradient: const [AppColors.primary, AppColors.primaryLight],
                   icon: Icons.copy_rounded,
-                  label: 'Копировать',
+                  label: copyLabel,
                   onTap: () async {
                     await Clipboard.setData(ClipboardData(text: eventLink));
                     if (mounted) {
                       Navigator.pop(context);
-                      showSnack(context, 'Ссылка скопирована!');
+                      showSnack(context, copiedMsg);
                     }
                   },
                 ),

@@ -5,10 +5,7 @@ import 'package:flutter/foundation.dart';
 class ApiService {
   static const String _productionUrl = 'https://eventhubdeploy-production.up.railway.app';
 
-  // URL для API-запросов приложения
   static String get baseUrl => _productionUrl;
-
-  // URL для share-ссылок (WhatsApp, Telegram, буфер обмена).
   static String get shareBaseUrl => _productionUrl;
 
   static Map<String, String> _authHeaders(String token) => {
@@ -49,7 +46,6 @@ class ApiService {
     return Exception(msg);
   }
 
-  // Успешный статус: 200 или 201 (Created)
   static bool _isSuccess(int code) => code == 200 || code == 201;
 
   // ─── NOTIFICATIONS ────────────────────────────────────────────────────────
@@ -92,6 +88,28 @@ class ApiService {
     }
     if (decoded is Map<String, dynamic>) return decoded;
     return {'message': decoded.toString()};
+  }
+
+  static Future<void> deleteNotification(String id, String token) async {
+    final url = '$baseUrl/notifications/$id';
+    _logRequest(method: 'DELETE', url: url);
+    final res = await http.delete(Uri.parse(url), headers: _authHeaders(token));
+    if (!_isSuccess(res.statusCode)) {
+      final decoded = _decodeAny(res);
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
+  }
+
+  static Future<void> clearAllNotifications(String token) async {
+    final url = '$baseUrl/notifications';
+    _logRequest(method: 'DELETE', url: url);
+    final res = await http.delete(Uri.parse(url), headers: _authHeaders(token));
+    if (!_isSuccess(res.statusCode)) {
+      final decoded = _decodeAny(res);
+      if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
+      throw _httpError(res);
+    }
   }
 
   // ─── FAVORITES ────────────────────────────────────────────────────────────
@@ -158,7 +176,6 @@ class ApiService {
     _logRequest(method: 'POST', url: url, body: body);
     final res = await http.post(Uri.parse(url), headers: _jsonAuthHeaders(token), body: body);
     final decoded = _decodeAny(res);
-    // POST может вернуть 201 Created
     if (!_isSuccess(res.statusCode)) {
       if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
       throw _httpError(res);
@@ -215,7 +232,6 @@ class ApiService {
     _logRequest(method: 'POST', url: url, body: body);
     final res = await http.post(Uri.parse(url), headers: _jsonAuthHeaders(token), body: body);
     final decoded = _decodeAny(res);
-    // POST /registrations вернёт 201
     if (!_isSuccess(res.statusCode)) {
       if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
       throw _httpError(res);
@@ -287,7 +303,6 @@ class ApiService {
     final res = await http.post(Uri.parse(url),
         headers: {'Content-Type': 'application/json'}, body: body);
     final data = _decodeAny(res);
-    // 201 Created — нормальный ответ для регистрации
     if (!_isSuccess(res.statusCode)) {
       if (data is Map) throw Exception(data['message']?.toString() ?? data.toString());
       if (data is String) throw Exception(data);
@@ -367,7 +382,6 @@ class ApiService {
     _logRequest(method: 'POST', url: url, body: body);
     final res = await http.post(Uri.parse(url), headers: _jsonAuthHeaders(token), body: body);
     final decoded = _decodeAny(res);
-    // 201 Created — нормальный ответ
     if (!_isSuccess(res.statusCode)) {
       if (decoded is Map<String, dynamic>) throw _httpError(res, decoded: decoded);
       if (decoded is String) throw Exception(decoded);

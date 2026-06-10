@@ -31,7 +31,8 @@ class AppState extends ChangeNotifier {
       final savedLang = prefs.getString('language');
 
       if (savedLang != null) language = savedLang;
-      // Тема не восстанавливается — всегда светлая при старте и входе
+      final savedDark = prefs.getBool('dark_mode');
+      if (savedDark != null) isDarkMode = savedDark;
 
       if (savedToken != null &&
           savedEmail != null &&
@@ -76,6 +77,7 @@ class AppState extends ChangeNotifier {
       await prefs.setString('user_role', user!.role);
     }
     await prefs.setString('language', language);
+    await prefs.setBool('dark_mode', isDarkMode);
   }
 
   Future<void> _clearSession() async {
@@ -85,7 +87,7 @@ class AppState extends ChangeNotifier {
     await prefs.remove('user_email');
     await prefs.remove('user_name');
     await prefs.remove('user_role');
-    await prefs.remove('dark_mode');
+    // dark_mode и language намеренно НЕ удаляем — сохраняем после logout
   }
 
   // ─── AUTH ─────────────────────────────────────────────────────────────────
@@ -104,7 +106,6 @@ class AppState extends ChangeNotifier {
   void logout() {
     user = null;
     token = null;
-    isDarkMode = false;
     myRegistrations = [];
     favorites = [];
     notifications = [];
@@ -164,6 +165,7 @@ class AppState extends ChangeNotifier {
       return matchQ && matchC;
     }).toList();
   }
+
   List<EventModel> get myEvents {
     final u = user;
     if (u == null) return const [];
@@ -275,7 +277,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Помечает уведомление прочитанным: вызывает API и обновляет локальный стейт.
   Future<void> markNotificationRead(String notificationId) async {
     final t = token;
     if (t == null || t.isEmpty) return;
@@ -283,12 +284,30 @@ class AppState extends ChangeNotifier {
     _applyNotificationReadLocally(notificationId);
   }
 
-  // Помечает все уведомления прочитанными: вызывает API и обновляет стейт.
   Future<void> markAllNotificationsRead() async {
     final t = token;
     if (t == null || t.isEmpty) return;
     await ApiService.readAllNotifications(t);
     await refreshNotifications();
+  }
+
+  Future<void> deleteNotification(String id) async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    await ApiService.deleteNotification(id, t);
+    notifications = notifications.where((n) {
+      if (n is! Map) return false;
+      return (n['_id'] ?? n['id'])?.toString() != id;
+    }).toList();
+    notifyListeners();
+  }
+
+  Future<void> clearAllNotifications() async {
+    final t = token;
+    if (t == null || t.isEmpty) return;
+    await ApiService.clearAllNotifications(t);
+    notifications = [];
+    notifyListeners();
   }
 
   void _applyNotificationReadLocally(String id) {
@@ -304,15 +323,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Используется в profile_screen.dart для отображения количества оценок пользователя
+  void markNotificationAsRead(String id) => _applyNotificationReadLocally(id);
+
+  // Используется в profile_screen.dart
   final Map<String, int> userRatings = {};
   int? getUserRating(String eventId) => userRatings[eventId];
 
-  // Вспомогательный геттер для UI
   List<String> getParticipants(String eventId) => const [];
-
-  // Локальное обновление без API — используется в notifications_screen.dart
-  // для мгновенного UI-отклика при тапе на уведомление.
-  // Параллельно вызывается markNotificationRead() для синхронизации с сервером.
-  void markNotificationAsRead(String id) => _applyNotificationReadLocally(id);
 }

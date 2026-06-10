@@ -4,6 +4,11 @@ const labels = {
     'kz': 'Сіз тіркелдіңіз',
     'en': 'Registered',
   },
+  'ended': {
+    'ru': 'Завершено',
+    'kz': 'Аяқталды',
+    'en': 'Ended',
+  },
 };
 
 String getLabel(String key, String lang) {
@@ -11,4 +16,3 @@ String getLabel(String key, String lang) {
   if (entry == null) return key;
   return entry[lang] ?? entry['en'] ?? key;
 }
-

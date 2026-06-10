@@ -47,12 +47,12 @@ class EventCard extends StatelessWidget {
     final cText  = isDark ? AppColors.darkText  : AppColors.text;
     final cMuted = isDark ? AppColors.darkMuted : AppColors.muted;
     final cBorder= isDark ? AppColors.darkBorder: AppColors.border;
-    final cBg    = isDark ? AppColors.darkBg    : AppColors.bg;
     final title    = event.getTitle(language);
     final location = event.getLocation(language);
     final gradient = categoryGradient(event.category);
     final fillPct  = event.fillPercent.clamp(0.0, 1.0);
     final when = DateFormat('dd MMM yyyy, HH:mm').format(event.eventDate);
+    final isEnded = event.eventDate.isBefore(DateTime.now());
 
     return GestureDetector(
       onTap: onTap,
@@ -81,7 +81,9 @@ class EventCard extends StatelessWidget {
                     CachedNetworkImage(
                       imageUrl: event.image.isNotEmpty ? event.image : _categoryDefaultImage(event.category),
                       fit: BoxFit.cover,
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: isEnded
+                          ? Colors.black.withValues(alpha: 0.55)
+                          : Colors.black.withValues(alpha: 0.3),
                       colorBlendMode: BlendMode.multiply,
                       errorWidget: (_, __, ___) => const SizedBox(),
                     ),
@@ -97,6 +99,22 @@ class EventCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    // Ended badge
+                    if (isEnded)
+                      Positioned(
+                        bottom: 10, right: 14,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            getLabel('ended', language),
+                            style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5),
+                          ),
+                        ),
+                      ),
                     // Registered badge
                     if (isRegistered)
                       Positioned(
@@ -134,15 +152,15 @@ class EventCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: cText), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(title, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: isEnded ? cMuted : cText), maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.primary),
+                      Icon(Icons.calendar_today_rounded, size: 12, color: isEnded ? cMuted : AppColors.primary),
                       const SizedBox(width: 4),
                       Flexible(child: Text(when, style: GoogleFonts.inter(fontSize: 11, color: cMuted), overflow: TextOverflow.ellipsis)),
                       const SizedBox(width: 8),
-                      const Icon(Icons.location_on_rounded, size: 12, color: AppColors.primary),
+                      Icon(Icons.location_on_rounded, size: 12, color: isEnded ? cMuted : AppColors.primary),
                       const SizedBox(width: 4),
                       Expanded(child: Text(location, style: GoogleFonts.inter(fontSize: 11, color: cMuted), overflow: TextOverflow.ellipsis)),
                     ],
@@ -159,14 +177,16 @@ class EventCard extends StatelessWidget {
                             minHeight: 5,
                             backgroundColor: const Color(0xFFF0EDFF),
                             valueColor: AlwaysStoppedAnimation(
-                              fillPct > 0.9 ? AppColors.danger : fillPct > 0.7 ? AppColors.warning : AppColors.primary,
+                              isEnded
+                                  ? cMuted
+                                  : fillPct > 0.9 ? AppColors.danger : fillPct > 0.7 ? AppColors.warning : AppColors.primary,
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Row(children: [
-                        const Icon(Icons.people_rounded, size: 12, color: AppColors.primary),
+                        Icon(Icons.people_rounded, size: 12, color: isEnded ? cMuted : AppColors.primary),
                         const SizedBox(width: 3),
                         Text('${event.registered}/${event.capacity}', style: GoogleFonts.inter(fontSize: 11, color: cMuted)),
                       ]),

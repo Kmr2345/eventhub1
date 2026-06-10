@@ -15,7 +15,7 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-// Mark all read (optional convenience)
+// Mark all read
 router.post("/readAll", auth, async (req, res) => {
   try {
     await Notification.updateMany(
@@ -43,5 +43,24 @@ router.put("/read/:id", auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+// DELETE одно уведомление
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    return res.json({ message: "Deleted" });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
+// DELETE все уведомления пользователя
+router.delete("/", auth, async (req, res) => {
+  try {
+    await Notification.deleteMany({ userId: req.user.id });
+    return res.json({ message: "Cleared" });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;
