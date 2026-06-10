@@ -1,14 +1,4 @@
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: 'ae41b3001@smtp-brevo.com',
-    pass: process.env.BREVO_SMTP_KEY,
-  },
-});
+const https = require('https');
 
 async function sendVerificationEmail(toEmail, code, lang = 'ru') {
   const subjects = {
@@ -29,11 +19,11 @@ async function sendVerificationEmail(toEmail, code, lang = 'ru') {
 
   const l = ['ru', 'kz', 'en'].includes(lang) ? lang : 'ru';
 
-  await transporter.sendMail({
-    from: '"EventHub" <ae41b3001@smtp-brevo.com>',
-    to: toEmail,
+  const payload = JSON.stringify({
+    sender: { name: 'EventHub', email: 'kunshuak.06@gmail.com' },
+    to: [{ email: toEmail }],
     subject: subjects[l],
-    html: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #f9f9f9; border-radius: 12px;">
         <h2 style="color: #6C63FF;">EventHub</h2>
         <p style="color: #333; font-size: 16px;">${titles[l]}</p>
@@ -43,6 +33,32 @@ async function sendVerificationEmail(toEmail, code, lang = 'ru') {
         <p style="color: #888; font-size: 13px;">${footers[l]}</p>
       </div>
     `,
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Length': Buffer.byteLength(payload),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Brevo API error ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
   });
 }
 
