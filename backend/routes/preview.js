@@ -17,8 +17,7 @@ router.get("/events/:id", async (req, res) => {
       : "";
     const location = ev.locationRu || ev.location || "";
 
-    // deep link в приложение (если настроен)
-    const appLink = `eventhub://events/${ev._id}`;
+
     const webLink = `https://eventhubdeploy-production.up.railway.app/events/${ev._id}`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -61,16 +60,9 @@ router.get("/events/:id", async (req, res) => {
       ${date ? `<div class="meta">📅 ${date}</div>` : ""}
       ${location ? `<div class="meta">📍 ${location}</div>` : ""}
       ${description ? `<div class="desc">${description}</div>` : ""}
-      <a class="btn" href="${appLink}" id="appBtn">Открыть в приложении</a>
     </div>
   </div>
-  <script>
-    // Пробуем открыть deep link, если не получилось — ничего
-    document.getElementById('appBtn').addEventListener('click', function(e) {
-      e.preventDefault();
-      window.location.href = '${appLink}';
-    });
-  </script>
+
 </body>
 </html>`);
   } catch (err) {
